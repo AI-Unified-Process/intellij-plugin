@@ -3,16 +3,16 @@ package ai.unifiedprocess.tools.ij
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.LineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
+import com.intellij.codeInsight.navigation.impl.PsiTargetPresentationRenderer
 import com.intellij.icons.AllIcons
-import com.intellij.ide.util.PsiElementListCellRenderer
 import com.intellij.openapi.editor.markup.GutterIconRenderer
-import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
+import java.util.function.Supplier
 
 /**
  * Adds gutter icons in Markdown spec files:
@@ -68,7 +68,7 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
             return NavigationGutterIconBuilder
                 .create(AllIcons.Nodes.Method)
                 .setTargets(tests)
-                .setCellRenderer(Computable { TestMethodRenderer })
+                .setTargetRenderer(Supplier { TestMethodRenderer })
                 .setTooltipText("Go to test methods for $useCaseId")
                 .setPopupTitle("Tests for $useCaseId")
                 .setAlignment(GutterIconRenderer.Alignment.LEFT)
@@ -85,7 +85,7 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
             return NavigationGutterIconBuilder
                 .create(AllIcons.Nodes.Method)
                 .setTargets(tests)
-                .setCellRenderer(Computable { TestMethodRenderer })
+                .setTargetRenderer(Supplier { TestMethodRenderer })
                 .setTooltipText("Go to test methods for $brId")
                 .setPopupTitle("Tests for $brId")
                 .setAlignment(GutterIconRenderer.Alignment.LEFT)
@@ -120,7 +120,7 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
             return NavigationGutterIconBuilder
                 .create(AllIcons.Nodes.Method)
                 .setTargets(tests)
-                .setCellRenderer(Computable { TestMethodRenderer })
+                .setTargetRenderer(Supplier { TestMethodRenderer })
                 .setTooltipText("Go to test methods for the Main Success Scenario of $useCaseId")
                 .setPopupTitle("Tests for Main Success Scenario")
                 .setAlignment(GutterIconRenderer.Alignment.LEFT)
@@ -140,7 +140,7 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
             return NavigationGutterIconBuilder
                 .create(AllIcons.Nodes.Method)
                 .setTargets(tests)
-                .setCellRenderer(Computable { TestMethodRenderer })
+                .setTargetRenderer(Supplier { TestMethodRenderer })
                 .setTooltipText("Go to test methods for $code")
                 .setPopupTitle("Tests for $code")
                 .setAlignment(GutterIconRenderer.Alignment.LEFT)
@@ -150,16 +150,15 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
         return null
     }
 
-    private object TestMethodRenderer : PsiElementListCellRenderer<PsiMethod>() {
-        override fun getElementText(element: PsiMethod): String {
-            val scenario = readScenarioAttribute(element)
-            return if (scenario.isNullOrBlank()) element.name else "${element.name} — $scenario"
+    private object TestMethodRenderer : PsiTargetPresentationRenderer<PsiElement>() {
+        override fun getElementText(element: PsiElement): String {
+            val method = element as? PsiMethod ?: return super.getElementText(element)
+            val scenario = readScenarioAttribute(method)
+            return if (scenario.isNullOrBlank()) method.name else "${method.name} — $scenario"
         }
 
-        override fun getContainerText(element: PsiMethod, name: String?): String? =
-            element.containingClass?.name
-
-        override fun getIconFlags(): Int = 0
+        override fun getContainerText(element: PsiElement): String? =
+            (element as? PsiMethod)?.containingClass?.name
 
         private fun readScenarioAttribute(method: PsiMethod): String? {
             val annotations = method.modifierList.annotations

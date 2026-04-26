@@ -3,10 +3,9 @@ package ai.unifiedprocess.tools.ij
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.LineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
+import com.intellij.codeInsight.navigation.impl.PsiTargetPresentationRenderer
 import com.intellij.icons.AllIcons
-import com.intellij.ide.util.PsiElementListCellRenderer
 import com.intellij.openapi.editor.markup.GutterIconRenderer
-import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiDocumentManager
@@ -16,6 +15,7 @@ import com.intellij.psi.PsiIdentifier
 import com.intellij.psi.PsiJavaCodeReferenceElement
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiManager
+import java.util.function.Supplier
 
 /**
  * Adds a gutter icon next to `@UseCase` annotations on test methods.
@@ -60,23 +60,21 @@ class UseCaseToSpecLineMarkerProvider : LineMarkerProvider {
             .setTargets(targets)
             .setTooltipText("Go to spec for $useCaseId")
             .setPopupTitle("Spec for $useCaseId")
-            .setCellRenderer(Computable { SpecTargetRenderer })
+            .setTargetRenderer(Supplier { SpecTargetRenderer })
             .setAlignment(GutterIconRenderer.Alignment.LEFT)
 
         return builder.createLineMarkerInfo(element)
     }
 
-    private object SpecTargetRenderer : PsiElementListCellRenderer<PsiElement>() {
+    private object SpecTargetRenderer : PsiTargetPresentationRenderer<PsiElement>() {
         override fun getElementText(element: PsiElement): String {
             val file = element.containingFile ?: return element.text.orEmpty()
             return headingTextAt(file, element.textRange.startOffset)
                 ?: file.name
         }
 
-        override fun getContainerText(element: PsiElement, name: String?): String? =
+        override fun getContainerText(element: PsiElement): String? =
             element.containingFile?.name
-
-        override fun getIconFlags(): Int = 0
 
         private fun headingTextAt(file: PsiFile, offset: Int): String? {
             val document = PsiDocumentManager.getInstance(file.project).getDocument(file) ?: return null
