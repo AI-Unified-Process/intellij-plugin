@@ -75,11 +75,14 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
                 .createLineMarkerInfo(element)
         }
 
-        // Case 2: Business Rule heading
+        // Case 2: Business Rule heading. BR ids are only unique within a UC,
+        // so scope the search to the UC declared by this spec file.
         val brMatch = businessRuleHeading.find(lineText)
         if (brMatch != null) {
+            val vfile = containingFile.virtualFile ?: return null
+            val useCaseId = UseCaseIndex.extractUseCaseId(vfile) ?: return null
             val brId = brMatch.groupValues[1]
-            val tests = UseCaseIndex.findTestMethodsForBusinessRule(project, brId)
+            val tests = UseCaseIndex.findTestMethodsForBusinessRule(project, useCaseId, brId)
             if (tests.isEmpty()) return null
 
             return NavigationGutterIconBuilder

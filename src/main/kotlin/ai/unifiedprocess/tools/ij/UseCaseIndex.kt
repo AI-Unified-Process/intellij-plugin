@@ -3,13 +3,7 @@ package ai.unifiedprocess.tools.ij
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiAnnotation
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiLiteralExpression
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiMethod
+import com.intellij.psi.*
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 
@@ -91,20 +85,18 @@ object UseCaseIndex {
     }
 
     /**
-     * Finds all test methods that reference the given Business Rule ID
-     * via the `businessRules` attribute.
+     * Finds test methods scoped to a specific Use Case that reference the given
+     * Business Rule ID via the `businessRules` attribute. BR ids are only unique
+     * within a Use Case (e.g. BR-001 exists in many UCs), so callers must
+     * disambiguate by UC.
      */
-    fun findTestMethodsForBusinessRule(project: Project, businessRuleId: String): List<PsiMethod> {
-        val annotationClass = findUseCaseAnnotationClass(project) ?: return emptyList()
-        val scope = GlobalSearchScope.projectScope(project)
-
-        val annotated = AnnotatedElementsSearch
-            .searchPsiMethods(annotationClass, scope)
-            .findAll()
-
-        return annotated.filter { method ->
-            val annotation = method.getAnnotation(annotationClass.qualifiedName!!) ?: return@filter false
-            getStringArrayAttribute(annotation, "businessRules").contains(businessRuleId)
+    fun findTestMethodsForBusinessRule(
+        project: Project,
+        useCaseId: String,
+        businessRuleId: String,
+    ): List<PsiMethod> {
+        return testMethodsMatching(project, useCaseId) { ann ->
+            getStringArrayAttribute(ann, "businessRules").contains(businessRuleId)
         }
     }
 
