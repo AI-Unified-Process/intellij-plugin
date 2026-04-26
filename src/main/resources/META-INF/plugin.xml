@@ -1,0 +1,38 @@
+<idea-plugin>
+    <id>ai.unifiedprocess.tools.ij</id>
+    <name>AIUP Use Case Navigator</name>
+    <vendor email="info@martinelli.ch" url="https://martinelli.ch">Martinelli LLC</vendor>
+
+    <description><![CDATA[
+        Navigate between <code>@UseCase</code> annotated test methods and their Markdown specs.
+        <ul>
+            <li>Gutter icon on <code>@UseCase</code> annotation jumps to the matching <code>UC-XXX-*.md</code> file</li>
+            <li>Gutter icon on <code>**Use Case ID:** UC-XXX</code> in Markdown jumps to all test methods with that ID</li>
+            <li>Gutter icon on <code>### BR-XXX</code> business rule headers jumps to tests referencing that rule</li>
+        </ul>
+        Works with the AI Unified Process (AIUP) methodology.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>org.intellij.plugins.markdown</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <codeInsight.lineMarkerProvider
+                language="JAVA"
+                implementationClass="ai.unifiedprocess.tools.ij.UseCaseToSpecLineMarkerProvider"/>
+
+        <codeInsight.lineMarkerProvider
+                language="Markdown"
+                implementationClass="ai.unifiedprocess.tools.ij.SpecToUseCaseLineMarkerProvider"/>
+
+        <localInspection
+                language="JAVA"
+                shortName="UseCaseIdHasNoSpec"
+                displayName="Use Case ID has no matching spec"
+                groupName="AIUP"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="ai.unifiedprocess.tools.ij.UseCaseIdInspection"/>
+    </extensions>
+</idea-plugin>
