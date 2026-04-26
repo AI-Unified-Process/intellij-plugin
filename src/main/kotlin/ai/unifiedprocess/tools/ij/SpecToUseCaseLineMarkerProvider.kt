@@ -7,6 +7,8 @@ import com.intellij.icons.AllIcons
 import com.intellij.ide.util.PsiElementListCellRenderer
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.util.Computable
+import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMethod
@@ -18,11 +20,15 @@ import com.intellij.psi.util.PsiTreeUtil
  *    annotated with that Use Case ID.
  *  - Next to "### BR-XXX" headings, jumping to test methods that reference
  *    that business rule via the @UseCase(businessRules = {...}) attribute.
+ *  - Next to scenario headings (`## Main Success Scenario`, `### A1: …`),
+ *    jumping to test methods whose `scenario` attribute matches.
+ *  - Next to the H1 title, jumping to the test class.
  *
- * We work on PSI leaf elements to comply with IntelliJ's LineMarkerProvider rules.
- * Markdown PSI does not expose a stable AST across versions, so we do plain text
- * matching on leaf nodes and ensure the marker is anchored to the first leaf of
- * the matching line.
+ * Markdown PSI splits a heading line across multiple leaves (the `###`
+ * marker is its own token, `**…**` fragments inline text further), so we
+ * cannot reliably match a multi-token regex against a single leaf. Instead,
+ * we anchor on the first leaf of each document line and run the regexes
+ * against the full line text read from the document.
  */
 class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
 
@@ -33,20 +39,28 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
     private val altFlowHeading = Regex("""^#{1,6}\s+([A-Z]\d+)\b""")
 
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
-        // Only consider leaf elements
         if (element.firstChild != null) return null
 
-        val text = element.text ?: return null
         val project = element.project
+        val containingFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project)
+            .getDocument(containingFile) ?: return null
+
+        val startOffset = element.textRange.startOffset
+        val lineNumber = document.getLineNumber(startOffset)
+        val lineStart = document.getLineStartOffset(lineNumber)
+
+        // Anchor on the first leaf of each line so we emit at most one marker
+        // per visible line, even when patterns span multiple PSI leaves.
+        val prev = PsiTreeUtil.prevLeaf(element)
+        if (prev != null && prev.textRange.endOffset > lineStart) return null
+
+        val lineEnd = document.getLineEndOffset(lineNumber)
+        val lineText = document.getText(TextRange(lineStart, lineEnd))
 
         // Case 1: Use Case ID line
-        val ucMatch = useCaseIdLine.find(text)
+        val ucMatch = useCaseIdLine.find(lineText)
         if (ucMatch != null) {
-            // Anchor the gutter on the leaf that actually contains the ID match,
-            // and avoid duplicate markers by skipping if a previous sibling on
-            // the same line already carried the pattern.
-            if (!isFirstMatchingLeafOnLine(element, useCaseIdLine)) return null
-
             val useCaseId = ucMatch.groupValues[1]
             val tests = UseCaseIndex.findTestMethods(project, useCaseId)
             if (tests.isEmpty()) return null
@@ -62,10 +76,8 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
         }
 
         // Case 2: Business Rule heading
-        val brMatch = businessRuleHeading.find(text)
+        val brMatch = businessRuleHeading.find(lineText)
         if (brMatch != null) {
-            if (!isFirstMatchingLeafOnLine(element, businessRuleHeading)) return null
-
             val brId = brMatch.groupValues[1]
             val tests = UseCaseIndex.findTestMethodsForBusinessRule(project, brId)
             if (tests.isEmpty()) return null
@@ -82,9 +94,8 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
 
         // Case 3: Title (H1) — link to the test class(es). Only for files that
         // declare a Use Case ID, so random Markdown H1s elsewhere don't get a marker.
-        if (titleHeading.containsMatchIn(text)) {
-            if (!isFirstMatchingLeafOnLine(element, titleHeading)) return null
-            val vfile = element.containingFile?.virtualFile ?: return null
+        if (titleHeading.containsMatchIn(lineText)) {
+            val vfile = containingFile.virtualFile ?: return null
             val useCaseId = UseCaseIndex.extractUseCaseId(vfile) ?: return null
             val classes = UseCaseIndex.findTestClasses(project, useCaseId)
             if (classes.isEmpty()) return null
@@ -100,9 +111,8 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
 
         // Case 4: "## Main Success Scenario" — link to test methods without a
         // scenario attribute (or with scenario = "Main Success Scenario").
-        if (mainScenarioHeading.containsMatchIn(text)) {
-            if (!isFirstMatchingLeafOnLine(element, mainScenarioHeading)) return null
-            val vfile = element.containingFile?.virtualFile ?: return null
+        if (mainScenarioHeading.containsMatchIn(lineText)) {
+            val vfile = containingFile.virtualFile ?: return null
             val useCaseId = UseCaseIndex.extractUseCaseId(vfile) ?: return null
             val tests = UseCaseIndex.findTestMethodsForMainScenario(project, useCaseId)
             if (tests.isEmpty()) return null
@@ -119,10 +129,9 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
 
         // Case 5: Alternative-flow heading like "### A1: Missing Description" —
         // link to test methods whose `scenario` attribute starts with that code.
-        val afMatch = altFlowHeading.find(text)
+        val afMatch = altFlowHeading.find(lineText)
         if (afMatch != null) {
-            if (!isFirstMatchingLeafOnLine(element, altFlowHeading)) return null
-            val vfile = element.containingFile?.virtualFile ?: return null
+            val vfile = containingFile.virtualFile ?: return null
             val useCaseId = UseCaseIndex.extractUseCaseId(vfile) ?: return null
             val code = afMatch.groupValues[1]
             val tests = UseCaseIndex.findTestMethodsForScenario(project, useCaseId, code)
@@ -139,31 +148,6 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
         }
 
         return null
-    }
-
-    /**
-     * Returns true if `element` is the first leaf on its document line whose
-     * text matches `pattern`. This prevents us from placing two markers on
-     * the same visible line when the pattern spans multiple PSI leaves.
-     */
-    private fun isFirstMatchingLeafOnLine(element: PsiElement, pattern: Regex): Boolean {
-        val document = com.intellij.psi.PsiDocumentManager
-            .getInstance(element.project)
-            .getDocument(element.containingFile) ?: return true
-
-        val lineNumber = document.getLineNumber(element.textRange.startOffset)
-        val lineStart = document.getLineStartOffset(lineNumber)
-
-        // Walk backwards through previous leaves on the same line; if any of
-        // them already match the pattern, this is not the first occurrence.
-        var prev = PsiTreeUtil.prevLeaf(element)
-        while (prev != null && prev.textRange.startOffset >= lineStart) {
-            if (prev.text != null && pattern.containsMatchIn(prev.text)) {
-                return false
-            }
-            prev = PsiTreeUtil.prevLeaf(prev)
-        }
-        return true
     }
 
     private object TestMethodRenderer : PsiElementListCellRenderer<PsiMethod>() {
