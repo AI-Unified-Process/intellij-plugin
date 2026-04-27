@@ -37,7 +37,7 @@ intellijPlatform {
         changeNotes = """
             <h3>Unreleased</h3>
             <ul>
-                <li></li>
+                <li>Improved Find usage.</li>
             </ul>
             <h3>0.1.0</h3>
             <ul>
