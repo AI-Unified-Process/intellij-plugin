@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.2.0"
+version = "0.3.0"
 
 repositories {
     mavenCentral()
@@ -35,7 +35,7 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.3.0</h3>
             <ul>
                 <li>Detect projects that have Use Case specs but no <code>UseCase</code> annotation type and offer a one-time balloon with a "Create UseCase.java" action that scaffolds the annotation into a chosen source root.</li>
             </ul>
