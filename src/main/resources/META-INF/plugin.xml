@@ -10,11 +10,11 @@
             <li>Gutter icon on <code>**Use Case ID:** UC-XXX</code> in Markdown jumps to all test methods with that ID</li>
             <li>Gutter icon on <code>### BR-XXX</code> business rule headers jumps to tests referencing that rule</li>
         </ul>
-        <b>Setup:</b> the host project must define a Java annotation type called <code>UseCase</code>
+        <p><b>Setup:</b> the host project must define a Java annotation type called <code>UseCase</code>
         with attributes <code>id</code>, <code>scenario</code>, and <code>businessRules</code>. If the
         plugin sees Markdown specs in a project but no such annotation, it offers a one-time balloon
-        with a "Create UseCase.java" action that scaffolds the file into a chosen source root.
-        Works with the <a href="https://unifiedprocess.ai">AI Unified Process (AIUP)</a> methodology.
+        with a "Create UseCase.java" action that scaffolds the file into a chosen source root.</p>
+        <p>Works with the <a href="https://unifiedprocess.ai">AI Unified Process (AIUP)</a> methodology.</p>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
