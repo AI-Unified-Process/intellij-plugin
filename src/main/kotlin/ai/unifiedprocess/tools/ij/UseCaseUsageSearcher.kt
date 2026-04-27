@@ -59,8 +59,7 @@ class UseCaseUsageSearcher : UsageSearcher {
         private val supplier: () -> List<Usage>,
     ) : AbstractQuery<Usage>() {
         override fun processResults(consumer: Processor<in Usage>): Boolean =
-            @Suppress("DEPRECATION")
-            ReadAction.compute<Boolean, RuntimeException> {
+            ReadAction.computeBlocking<Boolean, RuntimeException> {
                 supplier().all(consumer::process)
             }
     }
