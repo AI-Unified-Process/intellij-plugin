@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.4.0"
+version = "0.4.1"
 
 repositories {
     mavenCentral()
@@ -35,7 +35,7 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.4.1</h3>
             <ul>
                 <li>Replaced the deprecated <code>ReadAction.compute</code> calls with <code>ReadAction.computeBlocking</code> for compatibility with the 2026.1 platform API.</li>
             </ul>
