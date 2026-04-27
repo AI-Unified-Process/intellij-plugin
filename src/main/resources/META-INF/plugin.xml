@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>ai.unifiedprocess.tools.ij</id>
-    <name>AI Unified Process Plugin</name>
+    <name>AI Unified Process Navigator</name>
     <vendor email="info@martinelli.ch" url="https://martinelli.ch">Martinelli LLC</vendor>
 
     <description><![CDATA[
