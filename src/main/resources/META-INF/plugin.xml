@@ -35,10 +35,11 @@
                 level="WARNING"
                 implementationClass="ai.unifiedprocess.tools.ij.UseCaseIdInspection"/>
 
-        <findUsagesHandlerFactory
-                order="first"
-                implementation="ai.unifiedprocess.tools.ij.UseCaseFindUsagesHandlerFactory"/>
+        <psi.declarationProvider
+                implementation="ai.unifiedprocess.tools.ij.UseCaseDeclarationProvider"/>
 
-        <notificationGroup id="AIUP" displayType="BALLOON"/>
+        <searcher
+                forClass="com.intellij.find.usages.api.UsageSearchParameters"
+                implementationClass="ai.unifiedprocess.tools.ij.UseCaseUsageSearcher"/>
     </extensions>
 </idea-plugin>
