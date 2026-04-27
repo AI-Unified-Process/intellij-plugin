@@ -80,59 +80,52 @@ class UseCaseDeclarationProvider : PsiSymbolDeclarationProvider {
         val lineText = document.getText(TextRange(lineStart, lineEnd))
         val project = file.project
 
-        // Use Case ID body line — UC-XXX text is the search anchor.
+        val lineRange = TextRange(lineStart, lineEnd)
+
+        // Use Case ID body line.
         USE_CASE_ID_LINE.find(lineText)?.let { match ->
-            val captureRange = match.groups[1]!!.range
-            val abs = TextRange(lineStart + captureRange.first, lineStart + captureRange.last + 1)
             val symbol = UseCaseSymbol(project, match.groupValues[1])
-            return declarationOrEmpty(element, abs, symbol)
+            return declareOnLeafForLine(element, lineRange, symbol)
         }
 
         val ucIdFromFile = UseCaseIndex.extractUseCaseId(vfile) ?: return emptyList()
 
         BR_HEADING.find(lineText)?.let { match ->
-            val captureRange = match.groups[1]!!.range
-            val abs = TextRange(lineStart + captureRange.first, lineStart + captureRange.last + 1)
             val symbol = BusinessRuleSymbol(project, ucIdFromFile, match.groupValues[1])
-            return declarationOrEmpty(element, abs, symbol)
+            return declareOnLeafForLine(element, lineRange, symbol)
         }
 
         ALT_FLOW_HEADING.find(lineText)?.let { match ->
-            val captureRange = match.groups[1]!!.range
-            val abs = TextRange(lineStart + captureRange.first, lineStart + captureRange.last + 1)
             val symbol = ScenarioSymbol(project, ucIdFromFile, match.groupValues[1])
-            return declarationOrEmpty(element, abs, symbol)
+            return declareOnLeafForLine(element, lineRange, symbol)
         }
 
         if (MAIN_SCENARIO_HEADING.containsMatchIn(lineText)) {
-            val phrase = "Main Success Scenario"
-            val phraseStart = lineText.indexOf(phrase)
-            if (phraseStart >= 0) {
-                val abs = TextRange(lineStart + phraseStart, lineStart + phraseStart + phrase.length)
-                val symbol = ScenarioSymbol(project, ucIdFromFile, null)
-                return declarationOrEmpty(element, abs, symbol)
-            }
+            val symbol = ScenarioSymbol(project, ucIdFromFile, null)
+            return declareOnLeafForLine(element, lineRange, symbol)
         }
 
         if (TITLE_HEADING.containsMatchIn(lineText)) {
-            val titleStart = lineText.indexOf("# ") + 2
-            if (titleStart in 0..lineText.length) {
-                val abs = TextRange(lineStart + titleStart, lineEnd)
-                val symbol = UseCaseSymbol(project, ucIdFromFile)
-                return declarationOrEmpty(element, abs, symbol)
-            }
+            val symbol = UseCaseSymbol(project, ucIdFromFile)
+            return declareOnLeafForLine(element, lineRange, symbol)
         }
 
         return emptyList()
     }
 
-    private fun declarationOrEmpty(
+    /**
+     * Emits a declaration on the cursor's leaf covering the leaf's text range
+     * clamped to the matched line. This makes Find Usages fire from any
+     * cursor position on the line, not just on the captured-token leaf.
+     */
+    private fun declareOnLeafForLine(
         element: PsiElement,
-        absRange: TextRange,
+        lineRange: TextRange,
         symbol: Symbol,
     ): Collection<PsiSymbolDeclaration> {
-        if (!element.textRange.contains(absRange)) return emptyList()
-        val rangeInElement = absRange.shiftLeft(element.textRange.startOffset)
+        val leafOnLine = element.textRange.intersection(lineRange) ?: return emptyList()
+        if (leafOnLine.isEmpty) return emptyList()
+        val rangeInElement = leafOnLine.shiftLeft(element.textRange.startOffset)
         return listOf(SimpleDeclaration(element, rangeInElement, symbol))
     }
 

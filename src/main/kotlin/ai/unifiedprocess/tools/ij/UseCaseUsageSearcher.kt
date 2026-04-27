@@ -4,7 +4,7 @@ import com.intellij.find.usages.api.PsiUsage
 import com.intellij.find.usages.api.Usage
 import com.intellij.find.usages.api.UsageSearchParameters
 import com.intellij.find.usages.api.UsageSearcher
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
@@ -12,7 +12,8 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.util.CollectionQuery
+import com.intellij.util.AbstractQuery
+import com.intellij.util.Processor
 import com.intellij.util.Query
 
 /**
@@ -22,6 +23,13 @@ import com.intellij.util.Query
  * (UC-XXX × {Main | Aₙ}). Site list, in order:
  *   - Java `@UseCase(...)` literals matching the symbol
  *   - Markdown spec lines/headings matching the symbol
+ *
+ * Note: when invoked from a Markdown spec, the spec's own line appears as a
+ * self-reference in the result. There is no API to detect the cursor's source
+ * site from a `UsageSearcher`, and marking the entry as a declaration causes
+ * the framework to drop it entirely — losing the Java→spec link. Living with
+ * the one-row self-reference is the trade-off that keeps both directions
+ * working in Find Usages.
  */
 class UseCaseUsageSearcher : UsageSearcher {
 
@@ -30,15 +38,31 @@ class UseCaseUsageSearcher : UsageSearcher {
     ): Collection<Query<out Usage>> {
         val target = parameters.target as? UseCaseRelatedSymbol ?: return emptyList()
         val project = parameters.project
+        return listOf(ReadActionUsageQuery { collectUsages(project, target) })
+    }
 
-        val usages: List<Usage> = @Suppress("DEPRECATION") runReadAction {
-            buildList {
-                addAll(javaUsages(project, target))
-                addAll(markdownUsages(project, target))
-            }
+    private fun collectUsages(project: Project, target: UseCaseRelatedSymbol): List<Usage> =
+        buildList {
+            addAll(javaUsages(project, target))
+            addAll(markdownUsages(project, target))
         }
-        if (usages.isEmpty()) return emptyList()
-        return listOf(CollectionQuery(usages))
+
+    /**
+     * Runs the search and downstream consumer (which converts each `Usage`
+     * into a `UsageInfo` via smart-pointer creation) inside a single read
+     * action. The eager `runReadAction` in `collectSearchRequests` is not
+     * enough — the framework iterates the returned query later on a pooled
+     * thread without read access, and `PsiUsage2UsageInfo.<init>` then needs
+     * one to build smart pointers.
+     */
+    private class ReadActionUsageQuery(
+        private val supplier: () -> List<Usage>,
+    ) : AbstractQuery<Usage>() {
+        override fun processResults(consumer: Processor<in Usage>): Boolean =
+            @Suppress("DEPRECATION")
+            ReadAction.compute<Boolean, RuntimeException> {
+                supplier().all(consumer::process)
+            }
     }
 
     private fun javaUsages(project: Project, target: UseCaseRelatedSymbol): List<Usage> {
@@ -63,16 +87,20 @@ class UseCaseUsageSearcher : UsageSearcher {
         target: UseCaseRelatedSymbol,
         out: MutableList<Usage>,
     ) {
+        var sawScenarioAttr = false
         for (pair in ann.parameterList.attributes) {
             when (pair.name ?: "value") {
                 "id" -> if (target is UseCaseSymbol) {
                     (pair.value as? PsiLiteralExpression)?.let { out += it.asValueUsage() }
                 }
-                "scenario" -> if (target is ScenarioSymbol) {
-                    val literal = pair.value as? PsiLiteralExpression ?: continue
-                    val scenario = literal.value as? String
-                    val code = scenario?.let(::extractScenarioCode)
-                    if (code == target.scenarioCode) out += literal.asValueUsage()
+                "scenario" -> {
+                    sawScenarioAttr = true
+                    if (target is ScenarioSymbol) {
+                        val literal = pair.value as? PsiLiteralExpression ?: continue
+                        val scenario = literal.value as? String
+                        val code = scenario?.let(::extractScenarioCode)
+                        if (code == target.scenarioCode) out += literal.asValueUsage()
+                    }
                 }
                 "businessRules" -> if (target is BusinessRuleSymbol) {
                     val value = pair.value ?: continue
@@ -85,6 +113,15 @@ class UseCaseUsageSearcher : UsageSearcher {
                         if (br == target.brId) out += literal.asValueUsage()
                     }
                 }
+            }
+        }
+
+        // Implicit Main Success Scenario: a method with no explicit `scenario`
+        // attribute defaults to the main scenario, so anchor the usage on the
+        // annotation's `UseCase` identifier (no literal exists to point at).
+        if (target is ScenarioSymbol && target.scenarioCode == null && !sawScenarioAttr) {
+            ann.nameReferenceElement?.let { ref ->
+                out += PsiUsage.textUsage(ref.containingFile, ref.textRange)
             }
         }
     }
