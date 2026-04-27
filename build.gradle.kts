@@ -36,7 +36,9 @@ intellijPlatform {
         }
         changeNotes = """
             <h3>Unreleased</h3>
-            <ul></ul>
+            <ul>
+                <li>Detect projects that have Use Case specs but no <code>UseCase</code> annotation type and offer a one-time balloon with a "Create UseCase.java" action that scaffolds the annotation into a chosen source root.</li>
+            </ul>
             <h3>0.2.0</h3>
             <ul>
                 <li>Improved Find usage.</li>

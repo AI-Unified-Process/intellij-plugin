@@ -25,6 +25,42 @@ object UseCaseIndex {
      * Matches either the file name (e.g. UC-002-...md) or the
      * `**Use Case ID:** UC-XXX` line in the file body.
      */
+    /**
+     * Returns true if the project defines a `UseCase` annotation type.
+     * Used by the startup probe to decide whether to suggest scaffolding it.
+     */
+    fun hasUseCaseAnnotation(project: Project): Boolean =
+        findUseCaseAnnotationClass(project) != null
+
+    /**
+     * Returns true if the project contains at least one Markdown file that looks like
+     * a Use Case spec — either named `UC-XXX(-...).md` or containing the body line
+     * `**Use Case ID:** UC-XXX`. Short-circuits on the first match.
+     */
+    fun hasAnyUseCaseSpec(project: Project): Boolean {
+        var found = false
+        com.intellij.openapi.roots.ProjectFileIndex.getInstance(project).iterateContent { file ->
+            if (!file.isDirectory && file.extension == "md" && looksLikeUseCaseSpec(file)) {
+                found = true
+                false
+            } else {
+                true
+            }
+        }
+        return found
+    }
+
+    private fun looksLikeUseCaseSpec(file: VirtualFile): Boolean {
+        val name = file.nameWithoutExtension
+        if (name.matches(Regex("UC-[A-Za-z0-9_-]+"))) return true
+        return try {
+            val content = String(file.contentsToByteArray(), Charsets.UTF_8)
+            ID_REGEX.containsMatchIn(content)
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun findSpecFiles(project: Project, useCaseId: String): List<VirtualFile> {
         val result = mutableListOf<VirtualFile>()
         com.intellij.openapi.roots.ProjectFileIndex.getInstance(project).iterateContent { file ->

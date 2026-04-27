@@ -3,6 +3,28 @@
 IntelliJ plugin to navigate between `@UseCase`-annotated Java test methods and their Markdown specs in
 [AI Unified Process (AIUP)](https://unifiedprocess.ai) projects.
 
+## Setup
+
+The plugin requires the host project to define a Java annotation type named `UseCase`. It is looked up by short name, so
+any package works. The canonical shape is:
+
+```java
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface UseCase {
+    String id();
+
+    String scenario() default "Main Success Scenario";
+
+    String[] businessRules() default {};
+}
+```
+
+When the plugin opens a project that contains Markdown Use Case specs but no `UseCase` annotation type, it shows a
+one-time balloon notification with a **Create `UseCase.java`** action: pick a source root and the file is scaffolded for
+you.
+
 ## Features
 
 ### Gutter icons
@@ -38,21 +60,7 @@ Find Usages is wired in both directions, mirroring the gutter icons:
 
 ## Conventions used
 
-The plugin works with the conventions from the AIUP PetClinic example:
-
-```java
-
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface UseCase {
-    String id();
-
-    String scenario() default "Main Success Scenario";
-
-    String[] businessRules() default {};
-}
-```
+The plugin works with the Markdown conventions from the AIUP PetClinic example:
 
 ```markdown
 # View Veterinarians
@@ -66,8 +74,7 @@ public @interface UseCase {
 ### BR-001: Lazy Loading
 ```
 
-The plugin finds the `UseCase` annotation in your project automatically by short name, so you do not need to configure
-a fully qualified name.
+See [Setup](#setup) above for the matching Java annotation shape.
 
 ## Build
 
