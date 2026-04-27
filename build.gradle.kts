@@ -35,6 +35,8 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul></ul>
             <h3>0.2.0</h3>
             <ul>
                 <li>Improved Find usage.</li>
