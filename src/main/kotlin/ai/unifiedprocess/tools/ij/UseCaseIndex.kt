@@ -190,7 +190,7 @@ object UseCaseIndex {
         return findHeadingLeaf(project, useCaseId, pattern)
     }
 
-    private fun findBusinessRuleLeaf(project: Project, useCaseId: String, brId: String): PsiElement? {
+    fun findBusinessRuleLeaf(project: Project, useCaseId: String, brId: String): PsiElement? {
         return findHeadingLeaf(project, useCaseId, Regex("""^#{1,6}\s+${Regex.escape(brId)}\b"""))
     }
 

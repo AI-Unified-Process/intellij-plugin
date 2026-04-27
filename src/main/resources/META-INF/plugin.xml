@@ -34,5 +34,13 @@
                 enabledByDefault="true"
                 level="WARNING"
                 implementationClass="ai.unifiedprocess.tools.ij.UseCaseIdInspection"/>
+
+        <findUsagesHandlerFactory
+                order="first"
+                implementation="ai.unifiedprocess.tools.ij.UseCaseFindUsagesHandlerFactory"/>
+
+        <psi.referenceContributor
+                language="JAVA"
+                implementation="ai.unifiedprocess.tools.ij.UseCaseLiteralReferenceContributor"/>
     </extensions>
 </idea-plugin>
