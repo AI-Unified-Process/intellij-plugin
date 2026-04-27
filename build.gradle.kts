@@ -35,6 +35,10 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul>
+                <li></li>
+            </ul>
             <h3>0.1.0</h3>
             <ul>
                 <li>Initial release: gutter-icon navigation between <code>@UseCase</code>-annotated test methods and their Markdown specs.</li>
