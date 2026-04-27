@@ -1,6 +1,7 @@
 # AI Unified Process Navigator
 
-IntelliJ plugin to navigate between `@UseCase`-annotated Java test methods and their Markdown specs in AIUP projects.
+IntelliJ plugin to navigate between `@UseCase`-annotated Java test methods and their Markdown specs in
+[AI Unified Process (AIUP)](https://unifiedprocess.ai) projects.
 
 ## Features
 

@@ -10,7 +10,7 @@
             <li>Gutter icon on <code>**Use Case ID:** UC-XXX</code> in Markdown jumps to all test methods with that ID</li>
             <li>Gutter icon on <code>### BR-XXX</code> business rule headers jumps to tests referencing that rule</li>
         </ul>
-        Works with the AI Unified Process (AIUP) methodology.
+        Works with the <a href="https://unifiedprocess.ai">AI Unified Process (AIUP)</a> methodology.
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
