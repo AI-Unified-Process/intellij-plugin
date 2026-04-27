@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.3.0"
+version = "0.4.0"
 
 repositories {
     mavenCentral()
@@ -35,7 +35,7 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.4.0</h3>
             <ul>
                 <li>"Create UseCase.java" action now prompts for a Java package (defaulting to a <code>src/test/java</code> source root) instead of a directory, and writes a matching <code>package</code> declaration into the generated file.</li>
             </ul>
