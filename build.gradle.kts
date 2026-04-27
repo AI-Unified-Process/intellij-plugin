@@ -35,6 +35,10 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul>
+                <li>"Create UseCase.java" action now prompts for a Java package (defaulting to a <code>src/test/java</code> source root) instead of a directory, and writes a matching <code>package</code> declaration into the generated file.</li>
+            </ul>
             <h3>0.3.0</h3>
             <ul>
                 <li>Detect projects that have Use Case specs but no <code>UseCase</code> annotation type and offer a one-time balloon with a "Create UseCase.java" action that scaffolds the annotation into a chosen source root.</li>
