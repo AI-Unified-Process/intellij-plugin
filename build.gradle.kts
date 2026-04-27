@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.1.0"
+version = "0.2.0"
 
 repositories {
     mavenCentral()
@@ -35,7 +35,7 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.2.0</h3>
             <ul>
                 <li>Improved Find usage.</li>
             </ul>
