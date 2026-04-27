@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>ai.unifiedprocess.tools.ij</id>
-    <name>AIUP Use Case Navigator</name>
+    <name>AI Unified Process Plugin</name>
     <vendor email="info@martinelli.ch" url="https://martinelli.ch">Martinelli LLC</vendor>
 
     <description><![CDATA[
@@ -39,8 +39,6 @@
                 order="first"
                 implementation="ai.unifiedprocess.tools.ij.UseCaseFindUsagesHandlerFactory"/>
 
-        <psi.referenceContributor
-                language="JAVA"
-                implementation="ai.unifiedprocess.tools.ij.UseCaseLiteralReferenceContributor"/>
+        <notificationGroup id="AIUP" displayType="BALLOON"/>
     </extensions>
 </idea-plugin>

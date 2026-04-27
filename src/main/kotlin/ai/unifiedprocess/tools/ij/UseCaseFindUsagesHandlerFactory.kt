@@ -3,6 +3,8 @@ package ai.unifiedprocess.tools.ij
 import com.intellij.find.findUsages.FindUsagesHandler
 import com.intellij.find.findUsages.FindUsagesHandlerFactory
 import com.intellij.find.findUsages.FindUsagesOptions
+import com.intellij.notification.NotificationGroupManager
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -27,7 +29,15 @@ class UseCaseFindUsagesHandlerFactory(private val project: Project) : FindUsages
     override fun canFindUsages(element: PsiElement): Boolean {
         val case = classify(element)
         LOG.warn("AIUP canFindUsages element=${element.javaClass.simpleName} text='${element.text?.take(80)}' -> case=$case")
+        notify("canFindUsages: ${element.javaClass.simpleName} -> $case")
         return case != null
+    }
+
+    private fun notify(text: String) {
+        NotificationGroupManager.getInstance()
+            .getNotificationGroup("AIUP")
+            .createNotification("AIUP debug", text, NotificationType.INFORMATION)
+            .notify(project)
     }
 
     override fun createFindUsagesHandler(
