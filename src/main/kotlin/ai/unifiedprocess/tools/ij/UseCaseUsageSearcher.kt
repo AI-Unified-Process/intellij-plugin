@@ -41,6 +41,13 @@ class UseCaseUsageSearcher : UsageSearcher {
         return listOf(ReadActionUsageQuery { collectUsages(project, target) })
     }
 
+    // Explicit no-op overrides for the other two `Searcher` defaults. Without
+    // these, Kotlin generates type-narrowed bridge methods that `invokespecial`
+    // the `@ApiStatus.OverrideOnly` defaults — which the JetBrains plugin
+    // verifier flags as override-only API call violations.
+    override fun collectSearchRequest(parameters: UsageSearchParameters): Query<out Usage>? = null
+    override fun collectImmediateResults(parameters: UsageSearchParameters): Collection<Usage> = emptyList()
+
     private fun collectUsages(project: Project, target: UseCaseRelatedSymbol): List<Usage> =
         buildList {
             addAll(javaUsages(project, target))

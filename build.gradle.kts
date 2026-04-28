@@ -35,6 +35,10 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul>
+                <li>Fixed two override-only API violations flagged by the JetBrains plugin verifier: <code>UseCaseUsageSearcher</code> now explicitly overrides <code>collectSearchRequest</code> and <code>collectImmediateResults</code>, preventing Kotlin from generating bridge methods that invoke the <code>@ApiStatus.OverrideOnly</code> defaults on <code>Searcher</code>.</li>
+            </ul>
             <h3>0.4.1</h3>
             <ul>
                 <li>Replaced the deprecated <code>ReadAction.compute</code> calls with <code>ReadAction.computeBlocking</code> for compatibility with the 2026.1 platform API.</li>
