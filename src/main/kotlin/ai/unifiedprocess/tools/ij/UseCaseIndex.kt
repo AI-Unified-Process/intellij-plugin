@@ -147,13 +147,14 @@ object UseCaseIndex {
 
     /**
      * Test methods for the Main Success Scenario of a UC: those whose `scenario`
-     * attribute is missing, blank, or literally "Main Success Scenario".
+     * attribute is missing, blank, or literally "Main Success Scenario" /
+     * "Hauptszenario" (German equivalent).
      */
     fun findTestMethodsForMainScenario(project: Project, useCaseId: String): List<PsiMethod> {
         return testMethodsMatching(project, useCaseId) { ann ->
             val scenario = getStringAttribute(ann, "scenario")
             scenario.isNullOrBlank() ||
-                scenario.equals("Main Success Scenario", ignoreCase = true) ||
+                isMainScenarioLabel(scenario) ||
                 scenarioPrefix(scenario) == null
         }
     }
@@ -180,7 +181,7 @@ object UseCaseIndex {
         val brIds = getStringArrayAttribute(annotation, "businessRules")
 
         val scenarioCode = scenario
-            ?.takeIf { it.isNotBlank() && !it.equals("Main Success Scenario", ignoreCase = true) }
+            ?.takeIf { it.isNotBlank() && !isMainScenarioLabel(it) }
             ?.let { scenarioPrefix(it) }
 
         val result = mutableListOf<PsiElement>()
@@ -219,12 +220,16 @@ object UseCaseIndex {
 
     private fun findScenarioLeaf(project: Project, useCaseId: String, scenarioCode: String?): PsiElement? {
         val pattern = if (scenarioCode == null) {
-            Regex("""^#{1,6}\s+Main\s+Success\s+Scenario\s*$""")
+            Regex("""^#{1,6}\s+(?:Main\s+Success\s+Scenario|Hauptszenario)\s*$""")
         } else {
             Regex("""^#{1,6}\s+${Regex.escape(scenarioCode)}\b""")
         }
         return findHeadingLeaf(project, useCaseId, pattern)
     }
+
+    private fun isMainScenarioLabel(value: String): Boolean =
+        value.equals("Main Success Scenario", ignoreCase = true) ||
+            value.equals("Hauptszenario", ignoreCase = true)
 
     fun findBusinessRuleLeaf(project: Project, useCaseId: String, brId: String): PsiElement? {
         return findHeadingLeaf(project, useCaseId, Regex("""^#{1,6}\s+${Regex.escape(brId)}\b"""))

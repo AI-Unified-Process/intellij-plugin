@@ -35,7 +35,8 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
     private val useCaseIdLine = Regex("""\*\*Use Case ID:\*\*\s*(UC-[A-Za-z0-9_-]+)""")
     private val businessRuleHeading = Regex("""^#{1,6}\s+(BR-[A-Za-z0-9_-]+)\b""")
     private val titleHeading = Regex("""^# \S""")
-    private val mainScenarioHeading = Regex("""^#{1,6}\s+Main\s+Success\s+Scenario\s*$""")
+    private val mainScenarioHeading =
+        Regex("""^#{1,6}\s+(?:Main\s+Success\s+Scenario|Hauptszenario)\s*$""")
     private val altFlowHeading = Regex("""^#{1,6}\s+([A-Z]\d+)\b""")
 
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {

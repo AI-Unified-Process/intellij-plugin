@@ -182,9 +182,9 @@ class UseCaseUsageSearcher : UsageSearcher {
                 is ScenarioSymbol -> {
                     if (target.scenarioCode == null) {
                         if (MAIN_SCENARIO_HEADING.containsMatchIn(line)) {
-                            val phrase = "Main Success Scenario"
-                            val phraseStart = line.indexOf(phrase)
-                            if (phraseStart >= 0) {
+                            val phrase = MAIN_SCENARIO_PHRASES.firstOrNull { line.contains(it) }
+                            val phraseStart = phrase?.let { line.indexOf(it) } ?: -1
+                            if (phrase != null && phraseStart >= 0) {
                                 out += PsiUsage.textUsage(
                                     psiFile,
                                     TextRange(start + phraseStart, start + phraseStart + phrase.length),
@@ -218,7 +218,10 @@ class UseCaseUsageSearcher : UsageSearcher {
         ((annotation.findAttributeValue(name) as? PsiLiteralExpression)?.value) as? String
 
     private fun extractScenarioCode(scenario: String): String? {
-        if (scenario.isBlank() || scenario.equals("Main Success Scenario", ignoreCase = true)) {
+        if (scenario.isBlank() ||
+            scenario.equals("Main Success Scenario", ignoreCase = true) ||
+            scenario.equals("Hauptszenario", ignoreCase = true)
+        ) {
             return null
         }
         val colon = scenario.indexOf(':')
@@ -235,7 +238,9 @@ class UseCaseUsageSearcher : UsageSearcher {
         val USE_CASE_ID_LINE = Regex("""\*\*Use Case ID:\*\*\s*(UC-[A-Za-z0-9_-]+)""")
         val BR_HEADING = Regex("""^#{1,6}\s+(BR-[A-Za-z0-9_-]+)\b""")
         val ALT_FLOW_HEADING = Regex("""^#{1,6}\s+([A-Z]\d+)\b""")
-        val MAIN_SCENARIO_HEADING = Regex("""^#{1,6}\s+Main\s+Success\s+Scenario\s*$""")
+        val MAIN_SCENARIO_HEADING =
+            Regex("""^#{1,6}\s+(?:Main\s+Success\s+Scenario|Hauptszenario)\s*$""")
+        val MAIN_SCENARIO_PHRASES = listOf("Main Success Scenario", "Hauptszenario")
         val TITLE_HEADING = Regex("""^# \S""")
         val SCENARIO_PREFIX = Regex("""[A-Z]\d+""")
     }

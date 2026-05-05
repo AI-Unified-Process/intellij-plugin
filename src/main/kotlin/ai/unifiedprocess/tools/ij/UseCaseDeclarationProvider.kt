@@ -144,7 +144,8 @@ class UseCaseDeclarationProvider : PsiSymbolDeclarationProvider {
         val USE_CASE_ID_LINE = Regex("""\*\*Use Case ID:\*\*\s*(UC-[A-Za-z0-9_-]+)""")
         val BR_HEADING = Regex("""^#{1,6}\s+(BR-[A-Za-z0-9_-]+)\b""")
         val ALT_FLOW_HEADING = Regex("""^#{1,6}\s+([A-Z]\d+)\b""")
-        val MAIN_SCENARIO_HEADING = Regex("""^#{1,6}\s+Main\s+Success\s+Scenario\s*$""")
+        val MAIN_SCENARIO_HEADING =
+            Regex("""^#{1,6}\s+(?:Main\s+Success\s+Scenario|Hauptszenario)\s*$""")
         val TITLE_HEADING = Regex("""^# \S""")
         val SCENARIO_PREFIX = Regex("""[A-Z]\d+""")
     }

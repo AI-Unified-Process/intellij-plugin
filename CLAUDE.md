@@ -54,6 +54,8 @@ The plugin assumes the host project follows this shape (from the `aiup-petclinic
 - Markdown specs anywhere in the project content scope, identified by either filename `UC-XXX-*.md` or a body line
   `**Use Case ID:** UC-XXX`.
 - Business rules declared as Markdown headings of the form `### BR-XXX`.
+- The main flow heading may be either `Main Success Scenario` (English) or `Hauptszenario` (German); the
+  `scenario` attribute on `@UseCase` accepts both labels (case-insensitive) as the main flow.
 
 Changing these patterns means updating the regexes in `UseCaseIndex.USE_CASE_ID_PATTERN` and
 `SpecToUseCaseLineMarkerProvider.{useCaseIdLine,businessRuleHeading}` together.

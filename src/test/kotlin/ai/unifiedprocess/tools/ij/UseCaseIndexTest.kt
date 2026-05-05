@@ -123,6 +123,9 @@ class UseCaseIndexTest : AiupTestBase() {
                 @UseCase(id = "UC-001", scenario = "Main Success Scenario")
                 void explicitMain() {}
 
+                @UseCase(id = "UC-001", scenario = "Hauptszenario")
+                void explicitMainGerman() {}
+
                 @UseCase(id = "UC-001", scenario = "A1: missing description")
                 void altFlow() {}
             }
@@ -130,7 +133,7 @@ class UseCaseIndexTest : AiupTestBase() {
         )
 
         val names = UseCaseIndex.findTestMethodsForMainScenario(project, "UC-001").map { it.name }.toSet()
-        assertEquals(setOf("noScenario", "blankScenario", "explicitMain"), names)
+        assertEquals(setOf("noScenario", "blankScenario", "explicitMain", "explicitMainGerman"), names)
     }
 
     fun testFindTestMethodsForScenarioMatchesByPrefix() {
