@@ -42,6 +42,10 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul>
+                <li>Recognise <code>Hauptszenario</code> as the German equivalent of <code>Main Success Scenario</code>: gutter navigation, Find Usages, and the <code>scenario</code> attribute on <code>@UseCase</code> now accept either label.</li>
+            </ul>
             <h3>0.4.2</h3>
             <ul>
                 <li>Fixed two override-only API violations flagged by the JetBrains plugin verifier: <code>UseCaseUsageSearcher</code> now explicitly overrides <code>collectSearchRequest</code> and <code>collectImmediateResults</code>, preventing Kotlin from generating bridge methods that invoke the <code>@ApiStatus.OverrideOnly</code> defaults on <code>Searcher</code>.</li>
