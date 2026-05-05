@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.4.2"
+version = "0.4.3"
 
 repositories {
     mavenCentral()
@@ -42,7 +42,7 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.4.3</h3>
             <ul>
                 <li>Recognise <code>Hauptszenario</code> as the German equivalent of <code>Main Success Scenario</code>: gutter navigation, Find Usages, and the <code>scenario</code> attribute on <code>@UseCase</code> now accept either label.</li>
             </ul>
