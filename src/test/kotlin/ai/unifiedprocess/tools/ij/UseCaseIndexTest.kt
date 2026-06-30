@@ -26,6 +26,44 @@ class UseCaseIndexTest : AiupTestBase() {
         assertEquals(spec.virtualFile, results[0])
     }
 
+    fun testFindSpecFilesMatchesLetterSuffixedId() {
+        val spec = myFixture.addFileToProject(
+            "docs/UC-013b-variant.md",
+            "# Variant\n\n**Use Case ID:** UC-013b\n",
+        )
+        val other = myFixture.addFileToProject(
+            "docs/UC-013-base.md",
+            "# Base\n\n**Use Case ID:** UC-013\n",
+        )
+
+        val matches = UseCaseIndex.findSpecFiles(project, "UC-013b")
+        assertEquals(1, matches.size)
+        assertEquals(spec.virtualFile, matches[0])
+
+        val baseMatches = UseCaseIndex.findSpecFiles(project, "UC-013")
+        assertEquals(1, baseMatches.size)
+        assertEquals(other.virtualFile, baseMatches[0])
+    }
+
+    fun testFindSpecFilesMatchesMultiSegmentId() {
+        val byName = myFixture.addFileToProject(
+            "docs/UC-LOGIN-001-sign-in.md",
+            "# Sign in\n\nNo body marker here.\n",
+        )
+        val byBody = myFixture.addFileToProject(
+            "docs/checkout-flow.md",
+            "# Checkout\n\n**Use Case ID:** UC-CHECKOUT-002\n",
+        )
+
+        val nameMatches = UseCaseIndex.findSpecFiles(project, "UC-LOGIN-001")
+        assertEquals(1, nameMatches.size)
+        assertEquals(byName.virtualFile, nameMatches[0])
+
+        val bodyMatches = UseCaseIndex.findSpecFiles(project, "UC-CHECKOUT-002")
+        assertEquals(1, bodyMatches.size)
+        assertEquals(byBody.virtualFile, bodyMatches[0])
+    }
+
     fun testFindSpecFilesReturnsEmptyWhenNoMatch() {
         myFixture.addFileToProject("docs/UC-001-greeting.md", "# Greeting\n")
 

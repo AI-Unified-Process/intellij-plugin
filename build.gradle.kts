@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.4.3"
+version = "0.5.0"
 
 repositories {
     mavenCentral()
@@ -42,6 +42,10 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul>
+                <li>Support extended Use Case ID formats: letter-suffixed IDs (e.g. <code>UC-015a</code>) and multi-segment IDs (e.g. <code>UC-LOGIN-001</code>) in gutter navigation, spec-file matching, and Find Usages.</li>
+            </ul>
             <h3>0.4.3</h3>
             <ul>
                 <li>Recognise <code>Hauptszenario</code> as the German equivalent of <code>Main Success Scenario</code>: gutter navigation, Find Usages, and the <code>scenario</code> attribute on <code>@UseCase</code> now accept either label.</li>
