@@ -42,6 +42,8 @@ intellijPlatform {
             untilBuild = "261.*"
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul></ul>
             <h3>0.5.0</h3>
             <ul>
                 <li>Support extended Use Case ID formats: letter-suffixed IDs (e.g. <code>UC-015a</code>) and multi-segment IDs (e.g. <code>UC-LOGIN-001</code>) in gutter navigation, spec-file matching, and Find Usages.</li>
