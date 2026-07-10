@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.5.0"
+version = "0.5.1"
 
 repositories {
     mavenCentral()
@@ -43,7 +43,7 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.5.1</h3>
             <ul>
                 <li>Removed the <code>until-build</code> upper bound so the plugin remains compatible with IntelliJ IDEA 2026.2 (262) and later releases without requiring a re-release per IDE version.</li>
             </ul>
