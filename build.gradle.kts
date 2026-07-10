@@ -39,11 +39,14 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "261"
-            untilBuild = "261.*"
+            // No upper bound: keeps the plugin installable on 262+ without a re-release per IDE version.
+            untilBuild = provider { null }
         }
         changeNotes = """
             <h3>Unreleased</h3>
-            <ul></ul>
+            <ul>
+                <li>Removed the <code>until-build</code> upper bound so the plugin remains compatible with IntelliJ IDEA 2026.2 (262) and later releases without requiring a re-release per IDE version.</li>
+            </ul>
             <h3>0.5.0</h3>
             <ul>
                 <li>Support extended Use Case ID formats: letter-suffixed IDs (e.g. <code>UC-015a</code>) and multi-segment IDs (e.g. <code>UC-LOGIN-001</code>) in gutter navigation, spec-file matching, and Find Usages.</li>
@@ -85,6 +88,12 @@ intellijPlatform {
         certificateChain = providers.environmentVariable("CERTIFICATE_CHAIN")
         privateKey = providers.environmentVariable("PRIVATE_KEY")
         password = providers.environmentVariable("PRIVATE_KEY_PASSWORD")
+    }
+
+    pluginVerification {
+        ides {
+            recommended()
+        }
     }
 
     publishing {

@@ -100,8 +100,8 @@ This launches a sandbox IntelliJ with the plugin installed. Open your `aiup-petc
 
 ## Compatibility
 
-Targets IntelliJ IDEA 2026.1 (build 261+). Adjust `sinceBuild` / `untilBuild` and the platform dependency in
-`build.gradle.kts` if you need a different range. Requires the bundled Markdown plugin.
+Targets IntelliJ IDEA 2026.1 and later (build 261+, no upper bound). Adjust `sinceBuild` / `untilBuild` and the
+platform dependency in `build.gradle.kts` if you need a different range. Requires the bundled Markdown plugin.
 
 ## Notes
 

@@ -18,8 +18,9 @@ and their Markdown specs in AIUP (AI Unified Process) projects. Built with the J
 ./gradlew test               # Run unit tests (Platform test framework is wired in)
 ```
 
-Target IDE platform is IntelliJ IDEA Community 2026.1 (`sinceBuild=261`, `untilBuild=261.*`). Bumping support requires
-updating both the dependency in `build.gradle.kts` and `intellijPlatform.pluginConfiguration.ideaVersion`.
+Target IDE platform is IntelliJ IDEA Community 2026.1 (`sinceBuild=261`, no `untilBuild` upper bound — the plugin
+stays installable on newer IDE releases). Raising the minimum supported version requires updating both the dependency
+in `build.gradle.kts` and `intellijPlatform.pluginConfiguration.ideaVersion`.
 
 ## Architecture
 
