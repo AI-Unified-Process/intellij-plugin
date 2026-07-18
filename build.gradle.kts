@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.5.1"
+version = "0.6.0"
 
 repositories {
     mavenCentral()
@@ -47,7 +47,7 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.6.0</h3>
             <ul>
                 <li>New "AIUP Diagram" tool window: shows a live PlantUML activity diagram of the Use Case spec
                     in the selected editor, generated from the Main Success Scenario and the Alternative Flows
