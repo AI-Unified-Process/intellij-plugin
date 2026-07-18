@@ -9,6 +9,8 @@
             <li>Gutter icon on <code>@UseCase</code> annotation jumps to the matching <code>UC-XXX-*.md</code> file</li>
             <li>Gutter icon on <code>**Use Case ID:** UC-XXX</code> in Markdown jumps to all test methods with that ID</li>
             <li>Gutter icon on <code>### BR-XXX</code> business rule headers jumps to tests referencing that rule</li>
+            <li>"AIUP Diagram" tool window renders a live activity diagram of the Use Case spec in the
+                selected editor, generated from the Main Success Scenario and the Alternative Flows</li>
         </ul>
         <p><b>Setup:</b> the host project must define a Java annotation type called <code>UseCase</code>
         with attributes <code>id</code>, <code>scenario</code>, and <code>businessRules</code>. If the
@@ -50,5 +52,12 @@
         <searcher
                 forClass="com.intellij.find.usages.api.UsageSearchParameters"
                 implementationClass="ai.unifiedprocess.tools.ij.UseCaseUsageSearcher"/>
+
+        <toolWindow
+                id="AIUP Diagram"
+                anchor="right"
+                secondary="true"
+                icon="AllIcons.Toolwindows.ToolWindowHierarchy"
+                factoryClass="ai.unifiedprocess.tools.ij.ActivityDiagramToolWindowFactory"/>
     </extensions>
 </idea-plugin>

@@ -27,6 +27,10 @@ dependencies {
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
     }
 
+    // MIT-licensed PlantUML build with the embedded Smetana layout engine: the activity
+    // diagram tool window renders in-process, no Graphviz and no external service needed.
+    implementation("net.sourceforge.plantuml:plantuml-mit:1.2025.4")
+
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.opentest4j:opentest4j:1.3.0")
 }
@@ -43,6 +47,13 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul>
+                <li>New "AIUP Diagram" tool window: shows a live PlantUML activity diagram of the Use Case spec
+                    in the selected editor, generated from the Main Success Scenario and the Alternative Flows
+                    and rendered in-process (MIT-licensed PlantUML with the Smetana engine — no Graphviz, no
+                    external service).</li>
+            </ul>
             <h3>0.5.1</h3>
             <ul>
                 <li>Removed the <code>until-build</code> upper bound so the plugin remains compatible with IntelliJ IDEA 2026.2 (262) and later releases without requiring a re-release per IDE version.</li>
