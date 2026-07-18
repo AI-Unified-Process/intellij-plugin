@@ -47,6 +47,13 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul>
+                <li>Compile with <code>jvm-default = no-compatibility</code> so Kotlin no longer generates
+                    delegating bridge methods for inherited platform default methods; this removes all 4
+                    deprecated-API usages and 20 experimental-API usages reported by the JetBrains plugin
+                    verifier for 0.6.0.</li>
+            </ul>
             <h3>0.6.0</h3>
             <ul>
                 <li>New "AIUP Diagram" tool window: shows a live PlantUML activity diagram of the Use Case spec
@@ -115,6 +122,13 @@ intellijPlatform {
 
 kotlin {
     jvmToolchain(21)
+    compilerOptions {
+        // Inherit Java/Kotlin default methods instead of generating delegating bridge
+        // methods in implementing classes — the bridges show up in the JetBrains plugin
+        // verifier as deprecated/experimental API usages (e.g. the ToolWindowFactory
+        // defaults) even though the source never references them.
+        jvmDefault = org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode.NO_COMPATIBILITY
+    }
 }
 
 tasks {
