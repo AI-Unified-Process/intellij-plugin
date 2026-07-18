@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.6.1"
+version = "0.6.2"
 
 repositories {
     mavenCentral()
@@ -47,7 +47,7 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.6.2</h3>
             <ul>
                 <li>Restructured the Marketplace description: the "AIUP Diagram" tool window is now presented
                     as its own section instead of a bullet in the navigation list.</li>
