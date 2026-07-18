@@ -1,7 +1,10 @@
 # AI Unified Process Navigator
 
 IntelliJ plugin to navigate between `@UseCase`-annotated Java test methods and their Markdown specs in
-[AI Unified Process (AIUP)](https://unifiedprocess.ai) projects.
+[AI Unified Process (AIUP)](https://unifiedprocess.ai) projects — with a live activity diagram of the
+Use Case spec you are editing.
+
+![AIUP Diagram tool window rendering the activity diagram of a Use Case spec](docs/aiup-diagram-tool-window.png)
 
 ## Setup
 
@@ -26,6 +29,16 @@ one-time balloon notification with a **Create `UseCase.java`** action: pick a so
 you.
 
 ## Features
+
+### Activity diagram tool window
+
+The **AIUP Diagram** tool window (right-hand side) shows a live PlantUML activity diagram of the Use Case
+spec in the selected editor: the Main Success Scenario forms the numbered spine, and every Alternative
+Flow branches at the step its trigger references (e.g. `(Schritt 3)` / `(step 3)`) and rejoins the flow
+after its own steps. The diagram updates as you type (debounced) and is rendered entirely in-process with
+the MIT-licensed PlantUML build and the Smetana layout engine — no Graphviz installation, no external
+rendering service, the spec content never leaves the IDE. Both `## Main Success Scenario` and
+`## Hauptszenario` headings are recognised.
 
 ### Gutter icons
 

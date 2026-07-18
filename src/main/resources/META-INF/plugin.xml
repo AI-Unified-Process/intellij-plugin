@@ -4,13 +4,22 @@
     <vendor email="info@martinelli.ch" url="https://martinelli.ch">Martinelli LLC</vendor>
 
     <description><![CDATA[
-        Navigate between <code>@UseCase</code> annotated test methods and their Markdown specs.
+        Navigate between <code>@UseCase</code> annotated test methods and their Markdown specs — and see a
+        live activity diagram of the Use Case you are editing.
+
+        <h3>Live activity diagram</h3>
+        <p>The <b>AIUP Diagram</b> tool window renders a PlantUML activity diagram of the Use Case spec
+        (<code>UC-*.md</code>) in the selected editor: the Main Success Scenario is the spine, every
+        Alternative Flow branches at the step its trigger references. The diagram updates as you type and
+        is rendered entirely in-process (MIT-licensed PlantUML with the Smetana engine) — no Graphviz, no
+        external rendering service, the spec never leaves your IDE.</p>
+
+        <h3>Navigation between specs and tests</h3>
         <ul>
             <li>Gutter icon on <code>@UseCase</code> annotation jumps to the matching <code>UC-XXX-*.md</code> file</li>
             <li>Gutter icon on <code>**Use Case ID:** UC-XXX</code> in Markdown jumps to all test methods with that ID</li>
             <li>Gutter icon on <code>### BR-XXX</code> business rule headers jumps to tests referencing that rule</li>
-            <li>"AIUP Diagram" tool window renders a live activity diagram of the Use Case spec in the
-                selected editor, generated from the Main Success Scenario and the Alternative Flows</li>
+            <li>Find Usages (Alt+F7) works in both directions, and an inspection flags Use Case IDs without a spec</li>
         </ul>
         <p><b>Setup:</b> the host project must define a Java annotation type called <code>UseCase</code>
         with attributes <code>id</code>, <code>scenario</code>, and <code>businessRules</code>. If the

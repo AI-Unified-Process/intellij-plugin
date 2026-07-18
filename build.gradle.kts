@@ -47,6 +47,11 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul>
+                <li>Restructured the Marketplace description: the "AIUP Diagram" tool window is now presented
+                    as its own section instead of a bullet in the navigation list.</li>
+            </ul>
             <h3>0.6.1</h3>
             <ul>
                 <li>Compile with <code>jvm-default = no-compatibility</code> so Kotlin no longer generates
