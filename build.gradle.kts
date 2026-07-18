@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.6.0"
+version = "0.6.1"
 
 repositories {
     mavenCentral()
@@ -47,7 +47,7 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.6.1</h3>
             <ul>
                 <li>Compile with <code>jvm-default = no-compatibility</code> so Kotlin no longer generates
                     delegating bridge methods for inherited platform default methods; this removes all 4
