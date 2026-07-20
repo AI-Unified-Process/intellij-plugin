@@ -35,7 +35,7 @@ object ActivityDiagram {
      * another use case like `UC-012 Schritt 8` names that use case right before the word
      * and is not a branch point of this diagram.
      */
-    private val STEP_REFERENCE = Regex("""(UC-\d+\s+)?(?:Schritt|Step|schritt|step)\s+(\d+)""")
+    private val STEP_REFERENCE = Regex("""([SB]?UC-\d+\s+)?(?:Schritt|Step|schritt|step)\s+(\d+)""")
 
     private const val TRIGGER_FIELD = "**Trigger:**"
 

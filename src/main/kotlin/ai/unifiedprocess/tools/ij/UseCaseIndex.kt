@@ -11,14 +11,27 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch
  * Helpers to find Use Case specs and tests for a given ID.
  *
  * Convention:
+ *  - Use Case IDs are `UC-XXX`, or the `SUC-XXX` / `BUC-XXX` variants
+ *    (System / Business Use Case).
  *  - Spec files are Markdown files containing the line `**Use Case ID:** UC-XXX`
- *    (we also accept `UC-XXX` in the file name as a fallback).
+ *    (we also accept the ID in the file name as a fallback, optionally preceded
+ *    by a project prefix, e.g. `petclinic-UC-002-view.md`).
  *  - Test methods are annotated with `@UseCase(id = "UC-XXX", ...)`.
  */
 object UseCaseIndex {
 
-    private const val USE_CASE_ID_PATTERN = "\\*\\*Use Case ID:\\*\\*\\s*(UC-[A-Za-z0-9_-]+)"
-    private val ID_REGEX = Regex(USE_CASE_ID_PATTERN)
+    /**
+     * Matches the `**Use Case ID:** UC-XXX` declaration line; shared by every
+     * component that parses spec bodies so the accepted ID shapes stay in sync.
+     */
+    val USE_CASE_ID_LINE = Regex("""\*\*Use Case ID:\*\*\s*([SB]?UC-[A-Za-z0-9_-]+)""")
+
+    /**
+     * File names that identify a spec without reading it: `UC-XXX(-...)`,
+     * `SUC-...`, `BUC-...`, each optionally preceded by an arbitrary
+     * `<prefix>-` (e.g. `petclinic-UC-002-view-veterinarians`).
+     */
+    private val SPEC_FILE_NAME = Regex("""(?:.*-)?[SB]?UC-[A-Za-z0-9_-]+""")
 
     /**
      * Finds all Markdown files in the project that declare the given Use Case ID.
@@ -34,8 +47,8 @@ object UseCaseIndex {
 
     /**
      * Returns true if the project contains at least one Markdown file that looks like
-     * a Use Case spec — either named `UC-XXX(-...).md` or containing the body line
-     * `**Use Case ID:** UC-XXX`. Short-circuits on the first match.
+     * a Use Case spec — either with a name matching [SPEC_FILE_NAME] or containing
+     * the body line `**Use Case ID:** UC-XXX`. Short-circuits on the first match.
      */
     fun hasAnyUseCaseSpec(project: Project): Boolean {
         var found = false
@@ -50,12 +63,15 @@ object UseCaseIndex {
         return found
     }
 
+    /** True if the (extension-less) file name alone marks the file as a Use Case spec. */
+    fun isSpecFileName(nameWithoutExtension: String): Boolean =
+        SPEC_FILE_NAME.matches(nameWithoutExtension)
+
     private fun looksLikeUseCaseSpec(file: VirtualFile): Boolean {
-        val name = file.nameWithoutExtension
-        if (name.matches(Regex("UC-[A-Za-z0-9_-]+"))) return true
+        if (isSpecFileName(file.nameWithoutExtension)) return true
         return try {
             val content = String(file.contentsToByteArray(), Charsets.UTF_8)
-            ID_REGEX.containsMatchIn(content)
+            USE_CASE_ID_LINE.containsMatchIn(content)
         } catch (e: Exception) {
             false
         }
@@ -73,16 +89,19 @@ object UseCaseIndex {
     }
 
     private fun matchesUseCase(file: VirtualFile, useCaseId: String): Boolean {
-        // Quick check: file name often contains the ID like "UC-002-view-veterinarians.md"
-        if (file.nameWithoutExtension.startsWith("$useCaseId-") ||
-            file.nameWithoutExtension == useCaseId) {
+        // Quick check: file name contains the ID at `-` boundaries, like
+        // "UC-002-view-veterinarians.md" or "petclinic-UC-002-view.md". The
+        // leading boundary must be a literal `-` (or the name start) so that
+        // e.g. UC-002 does not match a SUC-002 spec.
+        val name = file.nameWithoutExtension
+        if (Regex("""(?:.*-)?${Regex.escape(useCaseId)}(?:-.*)?""").matches(name)) {
             return true
         }
 
         // Content check
         return try {
             val content = String(file.contentsToByteArray(), Charsets.UTF_8)
-            val match = ID_REGEX.find(content)
+            val match = USE_CASE_ID_LINE.find(content)
             match?.groupValues?.get(1) == useCaseId
         } catch (e: Exception) {
             false
@@ -96,7 +115,7 @@ object UseCaseIndex {
     fun extractUseCaseId(file: VirtualFile): String? {
         return try {
             val content = String(file.contentsToByteArray(), Charsets.UTF_8)
-            ID_REGEX.find(content)?.groupValues?.get(1)
+            USE_CASE_ID_LINE.find(content)?.groupValues?.get(1)
         } catch (e: Exception) {
             null
         }

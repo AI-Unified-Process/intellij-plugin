@@ -32,7 +32,7 @@ import java.util.function.Supplier
  */
 class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
 
-    private val useCaseIdLine = Regex("""\*\*Use Case ID:\*\*\s*(UC-[A-Za-z0-9_-]+)""")
+    private val useCaseIdLine = UseCaseIndex.USE_CASE_ID_LINE
     private val businessRuleHeading = Regex("""^#{1,6}\s+(BR-[A-Za-z0-9_-]+)\b""")
     private val titleHeading = Regex("""^# \S""")
     private val mainScenarioHeading =

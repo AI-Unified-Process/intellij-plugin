@@ -144,7 +144,8 @@ private class ActivityDiagramPanel(
     }
 
     private fun isUseCaseSpec(file: VirtualFile, text: String): Boolean =
-        file.extension == "md" && (file.name.startsWith("UC-") || text.contains("**Use Case ID:**"))
+        file.extension == "md" &&
+            (UseCaseIndex.isSpecFileName(file.nameWithoutExtension) || text.contains("**Use Case ID:**"))
 
     private companion object {
 

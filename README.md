@@ -44,7 +44,7 @@ rendering service, the spec content never leaves the IDE. Both `## Main Success 
 
 In Java:
 
-* `@UseCase(id = "UC-XXX")` jumps to the matching `UC-XXX-*.md` spec, landing on the scenario heading and any business
+* `@UseCase(id = "UC-XXX")` jumps to the matching spec file, landing on the scenario heading and any business
   rule headings referenced via `businessRules = {...}`.
 
 In Markdown specs:
@@ -86,6 +86,13 @@ The plugin works with the Markdown conventions from the AIUP PetClinic example:
 
 ### BR-001: Lazy Loading
 ```
+
+Use Case IDs may be plain `UC-XXX` or the `SUC-XXX` / `BUC-XXX` variants (System / Business Use Case). Spec files are
+matched two ways:
+
+* **By file name** — the ID at the start of the name (`UC-002-view-veterinarians.md`, `SUC-001-*.md`, `BUC-001-*.md`)
+  or after an arbitrary project prefix (`petclinic-UC-002-*.md`, `*-SUC-*.md`, `*-BUC-*.md`).
+* **By body line** — a `**Use Case ID:** UC-XXX` declaration anywhere in the file.
 
 See [Setup](#setup) above for the matching Java annotation shape.
 

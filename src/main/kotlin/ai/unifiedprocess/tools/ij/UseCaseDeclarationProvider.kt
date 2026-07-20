@@ -141,7 +141,7 @@ class UseCaseDeclarationProvider : PsiSymbolDeclarationProvider {
     }
 
     private companion object {
-        val USE_CASE_ID_LINE = Regex("""\*\*Use Case ID:\*\*\s*(UC-[A-Za-z0-9_-]+)""")
+        val USE_CASE_ID_LINE = UseCaseIndex.USE_CASE_ID_LINE
         val BR_HEADING = Regex("""^#{1,6}\s+(BR-[A-Za-z0-9_-]+)\b""")
         val ALT_FLOW_HEADING = Regex("""^#{1,6}\s+([A-Z]\d+)\b""")
         val MAIN_SCENARIO_HEADING =

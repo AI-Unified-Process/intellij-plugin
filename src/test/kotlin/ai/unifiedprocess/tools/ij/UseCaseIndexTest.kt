@@ -64,6 +64,76 @@ class UseCaseIndexTest : AiupTestBase() {
         assertEquals(byBody.virtualFile, bodyMatches[0])
     }
 
+    fun testFindSpecFilesMatchesSystemAndBusinessUseCaseIds() {
+        val suc = myFixture.addFileToProject(
+            "docs/SUC-001-view-owners.md",
+            "# View Owners\n\nNo body marker here.\n",
+        )
+        val buc = myFixture.addFileToProject(
+            "docs/BUC-001-onboard-customer.md",
+            "# Onboard Customer\n\nNo body marker here.\n",
+        )
+
+        val sucMatches = UseCaseIndex.findSpecFiles(project, "SUC-001")
+        assertEquals(1, sucMatches.size)
+        assertEquals(suc.virtualFile, sucMatches[0])
+
+        val bucMatches = UseCaseIndex.findSpecFiles(project, "BUC-001")
+        assertEquals(1, bucMatches.size)
+        assertEquals(buc.virtualFile, bucMatches[0])
+    }
+
+    fun testFindSpecFilesMatchesPrefixedFileNames() {
+        val prefixed = myFixture.addFileToProject(
+            "docs/petclinic-UC-002-view-veterinarians.md",
+            "# View Veterinarians\n\nNo body marker here.\n",
+        )
+        val prefixedSuc = myFixture.addFileToProject(
+            "docs/petclinic-SUC-003-edit-owner.md",
+            "# Edit Owner\n\nNo body marker here.\n",
+        )
+
+        val ucMatches = UseCaseIndex.findSpecFiles(project, "UC-002")
+        assertEquals(1, ucMatches.size)
+        assertEquals(prefixed.virtualFile, ucMatches[0])
+
+        val sucMatches = UseCaseIndex.findSpecFiles(project, "SUC-003")
+        assertEquals(1, sucMatches.size)
+        assertEquals(prefixedSuc.virtualFile, sucMatches[0])
+    }
+
+    fun testFindSpecFilesDoesNotConfuseUcWithSucOrBuc() {
+        myFixture.addFileToProject("docs/SUC-005-system.md", "# System\n")
+        myFixture.addFileToProject("docs/BUC-005-business.md", "# Business\n")
+
+        assertTrue(UseCaseIndex.findSpecFiles(project, "UC-005").isEmpty())
+    }
+
+    fun testFindSpecFilesMatchesSucBodyMarker() {
+        val spec = myFixture.addFileToProject(
+            "docs/some-spec.md",
+            "# Whatever\n\n**Use Case ID:** SUC-042\n",
+        )
+
+        val results = UseCaseIndex.findSpecFiles(project, "SUC-042")
+
+        assertEquals(1, results.size)
+        assertEquals(spec.virtualFile, results[0])
+        assertEquals("SUC-042", UseCaseIndex.extractUseCaseId(spec.virtualFile))
+    }
+
+    fun testIsSpecFileNameAcceptsAllVariants() {
+        assertTrue(UseCaseIndex.isSpecFileName("UC-002-view-veterinarians"))
+        assertTrue(UseCaseIndex.isSpecFileName("SUC-001-view-owners"))
+        assertTrue(UseCaseIndex.isSpecFileName("BUC-001-onboard-customer"))
+        assertTrue(UseCaseIndex.isSpecFileName("petclinic-UC-002-view"))
+        assertTrue(UseCaseIndex.isSpecFileName("petclinic-SUC-001-view"))
+        assertTrue(UseCaseIndex.isSpecFileName("petclinic-BUC-001-onboard"))
+
+        assertFalse(UseCaseIndex.isSpecFileName("README"))
+        assertFalse(UseCaseIndex.isSpecFileName("RUC-001-not-a-spec"))
+    }
+
     fun testFindSpecFilesReturnsEmptyWhenNoMatch() {
         myFixture.addFileToProject("docs/UC-001-greeting.md", "# Greeting\n")
 
