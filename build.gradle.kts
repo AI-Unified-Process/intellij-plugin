@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.6.2"
+version = "0.7.0"
 
 repositories {
     mavenCentral()
@@ -47,6 +47,14 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.7.0</h3>
+            <ul>
+                <li>Recognise more spec file name patterns: <code>SUC-*.md</code> and <code>BUC-*.md</code>
+                    (System / Business Use Case), and all three ID forms behind an arbitrary project prefix
+                    (<code>*-UC-*.md</code>, <code>*-SUC-*.md</code>, <code>*-BUC-*.md</code>). SUC-/BUC- IDs are
+                    also accepted in the <code>**Use Case ID:**</code> body line, gutter navigation, Find Usages,
+                    the spec inspection, and the AIUP Diagram tool window.</li>
+            </ul>
             <h3>0.6.2</h3>
             <ul>
                 <li>Restructured the Marketplace description: the "AIUP Diagram" tool window is now presented
