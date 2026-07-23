@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.7.0"
+version = "0.8.0"
 
 repositories {
     mavenCentral()
@@ -47,6 +47,22 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.8.0</h3>
+            <ul>
+                <li>Support the German AIUP spec style end to end: the Use Case ID may be declared in the
+                    H1 title (<code># UC-001: Kunde suchen</code>) instead of a <code>**Use Case ID:**</code>
+                    line, spec file names may use underscores (<code>UC-032_Kundeninformationen_bearbeiten.md</code>),
+                    and <code>## Hauptablauf</code> / <code>## Alternativabläufe</code> are recognised alongside
+                    the English headings.</li>
+                <li>AIUP Diagram: step-coded alternative-flow headings like
+                    <code>### 3a. Keine Treffer gefunden</code> branch directly at their step (no
+                    <code>**Trigger:**</code> field needed); sub-bullets under a numbered step are treated as
+                    detail and kept out of the step's diagram node.</li>
+                <li>Business rules written as bold bullet items (<code>- **GR-008:** …</code>) get gutter
+                    navigation and Find Usages, in addition to <code>### BR-XXX</code> headings; the
+                    <code>scenario</code> attribute accepts <code>Hauptablauf</code> and step codes such as
+                    <code>3a: Keine Treffer gefunden</code>.</li>
+            </ul>
             <h3>0.7.0</h3>
             <ul>
                 <li>Recognise more spec file name patterns: <code>SUC-*.md</code> and <code>BUC-*.md</code>
