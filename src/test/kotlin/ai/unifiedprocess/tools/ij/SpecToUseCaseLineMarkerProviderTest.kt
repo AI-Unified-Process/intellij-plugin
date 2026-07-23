@@ -142,6 +142,70 @@ class SpecToUseCaseLineMarkerProviderTest : AiupTestBase() {
         )
     }
 
+    fun testGuttersOnGermanSpecWithTitleIdStepFlowsAndBulletRules() {
+        myFixture.addFileToProject(
+            "src/test/java/example/KundeSuchenTest.java",
+            """
+            package example;
+
+            import ai.unifiedprocess.tools.UseCase;
+
+            class KundeSuchenTest {
+                @UseCase(id = "UC-001", scenario = "Hauptablauf")
+                void hauptablauf() {}
+
+                @UseCase(id = "UC-001", scenario = "3a: Keine Treffer gefunden")
+                void keineTreffer() {}
+
+                @UseCase(id = "UC-001", businessRules = {"GR-002"})
+                void caseInsensitiv() {}
+            }
+            """.trimIndent(),
+        )
+        val spec = myFixture.addFileToProject(
+            "docs/UC-001_Kunde_suchen.md",
+            """
+            # UC-001: Kunde suchen
+
+            ## Hauptablauf
+
+            1. Der Benutzer öffnet die Kundensuche
+            2. Der Benutzer gibt Suchkriterien ein
+            3. Das System zeigt die Ergebnisse an
+
+            ## Alternativabläufe
+
+            ### 3a. Keine Treffer gefunden
+
+            1. Das System zeigt eine Meldung an
+
+            ## Geschäftsregeln
+
+            - **GR-001:** Inaktive Kunden werden nicht angezeigt.
+            - **GR-002:** Die Suche ist case-insensitive
+            """.trimIndent(),
+        )
+        myFixture.configureFromExistingVirtualFile(spec.virtualFile)
+
+        val tooltips = myFixture.findAllGutters().tooltips()
+        assertTrue(
+            "expected UC-001 test-class gutter on the title, got $tooltips",
+            tooltips.any { it.contains("Go to test class for UC-001") },
+        )
+        assertTrue(
+            "expected Hauptablauf gutter, got $tooltips",
+            tooltips.any { it.contains("Go to test methods for the Main Success Scenario of UC-001") },
+        )
+        assertTrue(
+            "expected 3a gutter, got $tooltips",
+            tooltips.any { it.contains("Go to test methods for 3a") },
+        )
+        assertTrue(
+            "expected GR-002 gutter, got $tooltips",
+            tooltips.any { it.contains("Go to test methods for GR-002") },
+        )
+    }
+
     fun testNoGuttersWhenNoMatchingTests() {
         val spec = myFixture.addFileToProject(
             "docs/UC-404-orphan.md",

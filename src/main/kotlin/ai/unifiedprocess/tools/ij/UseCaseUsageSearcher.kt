@@ -218,15 +218,10 @@ class UseCaseUsageSearcher : UsageSearcher {
         ((annotation.findAttributeValue(name) as? PsiLiteralExpression)?.value) as? String
 
     private fun extractScenarioCode(scenario: String): String? {
-        if (scenario.isBlank() ||
-            scenario.equals("Main Success Scenario", ignoreCase = true) ||
-            scenario.equals("Hauptszenario", ignoreCase = true)
-        ) {
+        if (scenario.isBlank() || UseCaseIndex.isMainScenarioLabel(scenario)) {
             return null
         }
-        val colon = scenario.indexOf(':')
-        val prefix = (if (colon >= 0) scenario.substring(0, colon) else scenario).trim()
-        return prefix.takeIf { it.matches(SCENARIO_PREFIX) }
+        return UseCaseIndex.scenarioPrefix(scenario)
     }
 
     private fun findUseCaseAnnotationClass(project: Project) =
@@ -236,12 +231,10 @@ class UseCaseUsageSearcher : UsageSearcher {
 
     private companion object {
         val USE_CASE_ID_LINE = UseCaseIndex.USE_CASE_ID_LINE
-        val BR_HEADING = Regex("""^#{1,6}\s+(BR-[A-Za-z0-9_-]+)\b""")
-        val ALT_FLOW_HEADING = Regex("""^#{1,6}\s+([A-Z]\d+)\b""")
-        val MAIN_SCENARIO_HEADING =
-            Regex("""^#{1,6}\s+(?:Main\s+Success\s+Scenario|Hauptszenario)\s*$""")
-        val MAIN_SCENARIO_PHRASES = listOf("Main Success Scenario", "Hauptszenario")
+        val BR_HEADING = UseCaseIndex.BUSINESS_RULE_SITE
+        val ALT_FLOW_HEADING = UseCaseIndex.ALT_FLOW_HEADING
+        val MAIN_SCENARIO_HEADING = UseCaseIndex.MAIN_SCENARIO_HEADING
+        val MAIN_SCENARIO_PHRASES = UseCaseIndex.MAIN_SCENARIO_LABELS
         val TITLE_HEADING = Regex("""^# \S""")
-        val SCENARIO_PREFIX = Regex("""[A-Z]\d+""")
     }
 }

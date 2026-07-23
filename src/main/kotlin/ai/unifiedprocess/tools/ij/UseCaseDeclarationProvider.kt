@@ -20,9 +20,9 @@ import com.intellij.psi.util.PsiTreeUtil
  * the bundled Markdown plugin's `HeaderSymbol`):
  *  - `**Use Case ID:** UC-XXX` -> UseCaseSymbol on the UC-XXX text
  *  - `# Title` (H1, only when the file declares a UC ID) -> UseCaseSymbol on the title text
- *  - `## Main Success Scenario` -> ScenarioSymbol(null) on "Main Success Scenario"
- *  - `### A1: ...` -> ScenarioSymbol("A1") on "A1"
- *  - `### BR-XXX` -> BusinessRuleSymbol on "BR-XXX"
+ *  - `## Main Success Scenario` / `## Hauptablauf` -> ScenarioSymbol(null)
+ *  - `### A1: ...` / `### 3a. ...` -> ScenarioSymbol("A1" / "3a")
+ *  - `### BR-XXX` heading or `- **GR-XXX:** ...` bullet -> BusinessRuleSymbol
  */
 class UseCaseDeclarationProvider : PsiSymbolDeclarationProvider {
 
@@ -134,20 +134,14 @@ class UseCaseDeclarationProvider : PsiSymbolDeclarationProvider {
         return qn == "UseCase" || qn.endsWith(".UseCase")
     }
 
-    private fun scenarioPrefix(scenario: String): String? {
-        val colon = scenario.indexOf(':')
-        val prefix = (if (colon >= 0) scenario.substring(0, colon) else scenario).trim()
-        return prefix.takeIf { it.matches(SCENARIO_PREFIX) }
-    }
+    private fun scenarioPrefix(scenario: String): String? = UseCaseIndex.scenarioPrefix(scenario)
 
     private companion object {
         val USE_CASE_ID_LINE = UseCaseIndex.USE_CASE_ID_LINE
-        val BR_HEADING = Regex("""^#{1,6}\s+(BR-[A-Za-z0-9_-]+)\b""")
-        val ALT_FLOW_HEADING = Regex("""^#{1,6}\s+([A-Z]\d+)\b""")
-        val MAIN_SCENARIO_HEADING =
-            Regex("""^#{1,6}\s+(?:Main\s+Success\s+Scenario|Hauptszenario)\s*$""")
+        val BR_HEADING = UseCaseIndex.BUSINESS_RULE_SITE
+        val ALT_FLOW_HEADING = UseCaseIndex.ALT_FLOW_HEADING
+        val MAIN_SCENARIO_HEADING = UseCaseIndex.MAIN_SCENARIO_HEADING
         val TITLE_HEADING = Regex("""^# \S""")
-        val SCENARIO_PREFIX = Regex("""[A-Z]\d+""")
     }
 }
 

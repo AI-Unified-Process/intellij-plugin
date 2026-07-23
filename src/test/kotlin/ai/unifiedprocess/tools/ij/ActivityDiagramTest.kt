@@ -77,6 +77,69 @@ class ActivityDiagramTest {
         assertEquals(listOf("Erster Schritt."), scenario.mainSteps)
     }
 
+    private val germanSpec = """
+        # UC-001: Kunde suchen
+
+        **Ziel:** Kunden suchen und auswählen
+
+        ## Vorbedingungen
+
+        - Der Benutzer ist eingeloggt
+
+        ## Hauptablauf
+
+        1. Der Benutzer öffnet die Kundensuche
+        2. Der Benutzer gibt Suchkriterien ein
+        3. Das System zeigt die Ergebnisse an
+            - Oberhalb der Tabs wird eine Kopfzeile angezeigt
+            - Die Detailansicht ist in zwei Tabs gegliedert
+        4. Das System zeigt die Details des Kunden an
+
+        ## Alternativabläufe
+
+        ### 2a. Keine Treffer gefunden
+
+        1. Das System zeigt eine Meldung an
+        2. Weiter mit Schritt 2
+
+        ### 4a. Auftrag öffnen
+
+        1. Der Benutzer klickt auf die Auftragszeile
+    """.trimIndent()
+
+    @Test
+    fun parseReadsGermanSpecWithHauptablaufAndStepCodedFlows() {
+        val scenario = ActivityDiagram.parse(germanSpec)
+
+        assertEquals(4, scenario.mainSteps.size)
+        // sub-bullets are detail, not part of the step label
+        assertEquals("Das System zeigt die Ergebnisse an", scenario.mainSteps[2])
+
+        assertEquals(2, scenario.flows.size)
+        assertEquals("Keine Treffer gefunden", scenario.flows[0].title)
+        assertEquals("2a", scenario.flows[0].code)
+        assertEquals(2, scenario.flows[0].branchStep)
+        assertEquals(
+            listOf("Das System zeigt eine Meldung an", "Weiter mit Schritt 2"),
+            scenario.flows[0].steps,
+        )
+    }
+
+    @Test
+    fun generateBranchesStepCodedFlowAtItsStep() {
+        val source = ActivityDiagram.generate(ActivityDiagram.parse(germanSpec))
+
+        val step2 = source.indexOf(":2. Der Benutzer gibt Suchkriterien ein;")
+        val branch = source.indexOf("if (2a: Keine Treffer gefunden) then (2a)")
+        val step3 = source.indexOf(":3. Das System zeigt die Ergebnisse an;")
+        assertTrue("2a must branch after step 2 and before step 3", step2 in 0 until branch && branch < step3)
+
+        val step4 = source.indexOf(":4. Das System zeigt die Details des Kunden an;")
+        val branch4a = source.indexOf("if (4a: Auftrag öffnen) then (4a)")
+        val stop = source.indexOf("stop")
+        assertTrue("4a must branch after step 4", step4 in 0 until branch4a && branch4a < stop)
+    }
+
     @Test
     fun generateBranchesFlowAtReferencedStep() {
         val source = ActivityDiagram.generate(ActivityDiagram.parse(spec))

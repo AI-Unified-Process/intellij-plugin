@@ -18,10 +18,12 @@ import java.util.function.Supplier
  * Adds gutter icons in Markdown spec files:
  *  - Next to "**Use Case ID:** UC-XXX" lines, jumping to all test methods
  *    annotated with that Use Case ID.
- *  - Next to "### BR-XXX" headings, jumping to test methods that reference
- *    that business rule via the @UseCase(businessRules = {...}) attribute.
- *  - Next to scenario headings (`## Main Success Scenario`, `### A1: …`),
- *    jumping to test methods whose `scenario` attribute matches.
+ *  - Next to business-rule sites ("### BR-XXX" headings or "- **GR-XXX:** …"
+ *    bullets), jumping to test methods that reference that business rule via
+ *    the @UseCase(businessRules = {...}) attribute.
+ *  - Next to scenario headings (`## Main Success Scenario` / `## Hauptablauf`,
+ *    `### A1: …` / `### 3a. …`), jumping to test methods whose `scenario`
+ *    attribute matches.
  *  - Next to the H1 title, jumping to the test class.
  *
  * Markdown PSI splits a heading line across multiple leaves (the `###`
@@ -33,11 +35,10 @@ import java.util.function.Supplier
 class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
 
     private val useCaseIdLine = UseCaseIndex.USE_CASE_ID_LINE
-    private val businessRuleHeading = Regex("""^#{1,6}\s+(BR-[A-Za-z0-9_-]+)\b""")
+    private val businessRuleHeading = UseCaseIndex.BUSINESS_RULE_SITE
     private val titleHeading = Regex("""^# \S""")
-    private val mainScenarioHeading =
-        Regex("""^#{1,6}\s+(?:Main\s+Success\s+Scenario|Hauptszenario)\s*$""")
-    private val altFlowHeading = Regex("""^#{1,6}\s+([A-Z]\d+)\b""")
+    private val mainScenarioHeading = UseCaseIndex.MAIN_SCENARIO_HEADING
+    private val altFlowHeading = UseCaseIndex.ALT_FLOW_HEADING
 
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
         if (element.firstChild != null) return null

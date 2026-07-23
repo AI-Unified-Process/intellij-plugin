@@ -122,6 +122,26 @@ class UseCaseIndexTest : AiupTestBase() {
         assertEquals("SUC-042", UseCaseIndex.extractUseCaseId(spec.virtualFile))
     }
 
+    fun testFindSpecFilesMatchesGermanSpecByTitleAndUnderscoreName() {
+        val byName = myFixture.addFileToProject(
+            "docs/UC-032_Kundeninformationen_bearbeiten.md",
+            "# Kundeninformationen bearbeiten\n\nKein Body-Marker.\n",
+        )
+        val byTitle = myFixture.addFileToProject(
+            "docs/kundensuche.md",
+            "# UC-001: Kunde suchen\n\n## Hauptablauf\n\n1. Der Benutzer sucht\n",
+        )
+
+        val nameMatches = UseCaseIndex.findSpecFiles(project, "UC-032")
+        assertEquals(1, nameMatches.size)
+        assertEquals(byName.virtualFile, nameMatches[0])
+
+        val titleMatches = UseCaseIndex.findSpecFiles(project, "UC-001")
+        assertEquals(1, titleMatches.size)
+        assertEquals(byTitle.virtualFile, titleMatches[0])
+        assertEquals("UC-001", UseCaseIndex.extractUseCaseId(byTitle.virtualFile))
+    }
+
     fun testIsSpecFileNameAcceptsAllVariants() {
         assertTrue(UseCaseIndex.isSpecFileName("UC-002-view-veterinarians"))
         assertTrue(UseCaseIndex.isSpecFileName("SUC-001-view-owners"))
@@ -129,6 +149,8 @@ class UseCaseIndexTest : AiupTestBase() {
         assertTrue(UseCaseIndex.isSpecFileName("petclinic-UC-002-view"))
         assertTrue(UseCaseIndex.isSpecFileName("petclinic-SUC-001-view"))
         assertTrue(UseCaseIndex.isSpecFileName("petclinic-BUC-001-onboard"))
+        assertTrue(UseCaseIndex.isSpecFileName("UC-032_Kundeninformationen_bearbeiten"))
+        assertTrue(UseCaseIndex.isSpecFileName("UC-014_Auftrag_ändern"))
 
         assertFalse(UseCaseIndex.isSpecFileName("README"))
         assertFalse(UseCaseIndex.isSpecFileName("RUC-001-not-a-spec"))
@@ -301,6 +323,54 @@ class UseCaseIndexTest : AiupTestBase() {
 
         val classNames = UseCaseIndex.findTestClasses(project, "UC-001").map { it.name }.toSet()
         assertEquals(setOf("ClassATest", "ClassBTest"), classNames)
+    }
+
+    fun testFindTestMethodsForGermanScenariosAndStepCodes() {
+        myFixture.addFileToProject(
+            "src/test/java/example/GermanScenarioTest.java",
+            """
+            package example;
+
+            import ai.unifiedprocess.tools.UseCase;
+
+            class GermanScenarioTest {
+                @UseCase(id = "UC-001", scenario = "Hauptablauf")
+                void mainFlow() {}
+
+                @UseCase(id = "UC-001", scenario = "3a: Keine Treffer gefunden")
+                void noResults() {}
+
+                @UseCase(id = "UC-001", scenario = "3a")
+                void noResultsShort() {}
+
+                @UseCase(id = "UC-001", scenario = "5a: Mehrere Treffer gefunden")
+                void multipleResults() {}
+            }
+            """.trimIndent(),
+        )
+
+        val main = UseCaseIndex.findTestMethodsForMainScenario(project, "UC-001").map { it.name }.toSet()
+        assertEquals(setOf("mainFlow"), main)
+
+        val flow3a = UseCaseIndex.findTestMethodsForScenario(project, "UC-001", "3a").map { it.name }.toSet()
+        assertEquals(setOf("noResults", "noResultsShort"), flow3a)
+    }
+
+    fun testFindBusinessRuleLeafLocatesGermanBulletRule() {
+        myFixture.addFileToProject(
+            "docs/UC-001_Kunde_suchen.md",
+            """
+            # UC-001: Kunde suchen
+
+            ## Geschäftsregeln
+
+            - **GR-001:** Inaktive Kunden werden standardmässig nicht angezeigt.
+            - **GR-002:** Die Suche ist case-insensitive
+            """.trimIndent(),
+        )
+
+        val leaf = UseCaseIndex.findBusinessRuleLeaf(project, "UC-001", "GR-002")
+        assertNotNull(leaf)
     }
 
     fun testFindBusinessRuleLeafLocatesHeading() {

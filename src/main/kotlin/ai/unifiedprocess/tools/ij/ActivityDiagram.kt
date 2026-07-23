@@ -13,20 +13,41 @@ package ai.unifiedprocess.tools.ij
  */
 object ActivityDiagram {
 
-    data class AlternativeFlow(val title: String, val trigger: String, val steps: List<String>)
+    data class AlternativeFlow(
+        val title: String,
+        val trigger: String,
+        val steps: List<String>,
+        /** The flow's own code from its heading (`A1`, `3a`), if it has one. */
+        val code: String? = null,
+        /** The branch step encoded in a step-coded heading like `3a.`, if any. */
+        val branchStep: Int? = null,
+    )
 
     data class Scenario(val mainSteps: List<String>, val flows: List<AlternativeFlow>)
 
     private val MAIN_HEADING =
-        Regex("""#{2,6}\s+(?:Main\s+Success\s+Scenario|Hauptszenario)\s*""", RegexOption.IGNORE_CASE)
+        Regex(
+            """#{2,6}\s+(?:Main\s+Success\s+Scenario|Hauptszenario|Hauptablauf)\s*""",
+            RegexOption.IGNORE_CASE,
+        )
 
     private val FLOWS_HEADING =
-        Regex("""#{2,6}\s+(?:Alternative\s+Flows|Alternativszenarien)\s*""", RegexOption.IGNORE_CASE)
+        Regex(
+            """#{2,6}\s+(?:Alternative\s+Flows|Alternativszenarien|Alternative\s+Abläufe|Alternativabläufe)\s*""",
+            RegexOption.IGNORE_CASE,
+        )
 
     /** A flow heading, e.g. `### A1: Neues Diagramm`; the label part is optional. */
     private val FLOW_HEADING = Regex("""#{3,6}\s+(.*)""")
 
-    private val FLOW_LABEL = Regex("""A\d+\s*:\s*(.*)""")
+    private val FLOW_LABEL = Regex("""(A\d+)\s*:\s*(.*)""")
+
+    /**
+     * A step-coded flow heading in the German spec style, e.g.
+     * `3a. Keine Treffer gefunden`: the digits name the main-scenario step the
+     * flow branches at, digits+letter are the flow's code.
+     */
+    private val STEP_CODED_FLOW_LABEL = Regex("""(\d+)([a-z])\s*[.:)]?\s*(.*)""")
 
     private val NUMBERED_ITEM = Regex("""(\d+)\.\s+(.*)""")
 
@@ -107,7 +128,19 @@ object ActivityDiagram {
                 continue
             }
             val headingText = heading.groupValues[1].trim()
-            val title = FLOW_LABEL.matchEntire(headingText)?.groupValues?.get(1)?.trim() ?: headingText
+            var code: String? = null
+            var branchStep: Int? = null
+            var title = headingText
+            val label = FLOW_LABEL.matchEntire(headingText)
+            val stepCoded = STEP_CODED_FLOW_LABEL.matchEntire(headingText)
+            if (label != null) {
+                code = label.groupValues[1]
+                title = label.groupValues[2].trim()
+            } else if (stepCoded != null) {
+                branchStep = stepCoded.groupValues[1].toIntOrNull()
+                code = stepCoded.groupValues[1] + stepCoded.groupValues[2]
+                title = stepCoded.groupValues[3].trim().ifEmpty { headingText }
+            }
             index++
             while (index < lines.size && lines[index].isBlank()) {
                 index++
@@ -124,7 +157,7 @@ object ActivityDiagram {
             val steps = mutableListOf<String>()
             index = parseNumberedItems(lines, index, steps)
             if (trigger.isNotEmpty() || steps.isNotEmpty()) {
-                flows.add(AlternativeFlow(title, trigger, steps))
+                flows.add(AlternativeFlow(title, trigger, steps, code, branchStep))
             }
         }
         return index
@@ -132,8 +165,9 @@ object ActivityDiagram {
 
     /**
      * Wrapped lines are joined into the current item: everything up to the next blank
-     * line, structure marker or heading belongs to the item, indented or not, so
-     * hand-formatted files stay readable.
+     * line, structure marker, sub-bullet or heading belongs to the item, indented or
+     * not, so hand-formatted files stay readable. Sub-bullets (`- …` / `* …` under a
+     * numbered step) are detail, not part of the step label, and are skipped.
      */
     private fun joinContinuation(lines: List<String>, start: Int, item: StringBuilder): Int {
         var index = start
@@ -145,20 +179,25 @@ object ActivityDiagram {
     }
 
     private fun isContinuation(line: String): Boolean {
-        if (line.isBlank() || line.startsWith("#") || line.startsWith("**") || line.startsWith("- ")) {
+        val trimmed = line.trimStart()
+        if (line.isBlank() || trimmed.startsWith("#") || trimmed.startsWith("**") ||
+            trimmed.startsWith("- ") || trimmed.startsWith("* ")
+        ) {
             return false
         }
         return !NUMBERED_ITEM.matches(line.trim()) || line.startsWith(" ")
     }
 
     /**
-     * Every alternative flow branches at the step its trigger references; a flow whose
-     * trigger names no step of the scenario branches after the last step.
+     * Every alternative flow branches at the step its heading code (`3a` -> step 3)
+     * or its trigger references; a flow that names no step of the scenario branches
+     * after the last step.
      */
     private fun flowsByStep(scenario: Scenario): List<List<AlternativeFlow>> {
         val byStep = List(scenario.mainSteps.size) { mutableListOf<AlternativeFlow>() }
         for (flow in scenario.flows) {
-            val step = referencedStep(flow.trigger, scenario.mainSteps.size)
+            val step = flow.branchStep?.takeIf { it in 1..scenario.mainSteps.size }
+                ?: referencedStep(flow.trigger, scenario.mainSteps.size)
             byStep[if (step == null) scenario.mainSteps.size - 1 else step - 1].add(flow)
         }
         return byStep
@@ -179,7 +218,7 @@ object ActivityDiagram {
     }
 
     private fun appendBranch(builder: StringBuilder, scenario: Scenario, flow: AlternativeFlow) {
-        val flowLabel = "A${scenario.flows.indexOf(flow) + 1}"
+        val flowLabel = flow.code ?: "A${scenario.flows.indexOf(flow) + 1}"
         val condition = flow.trigger.ifBlank { flow.title }
         builder.append("if (").append(label("$flowLabel: $condition")).append(") then (").append(flowLabel)
             .append(")\n")

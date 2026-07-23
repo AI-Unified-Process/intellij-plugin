@@ -33,12 +33,18 @@ you.
 ### Activity diagram tool window
 
 The **AIUP Diagram** tool window (right-hand side) shows a live PlantUML activity diagram of the Use Case
-spec in the selected editor: the Main Success Scenario forms the numbered spine, and every Alternative
+spec in the selected editor: the main flow forms the numbered spine, and every Alternative
 Flow branches at the step its trigger references (e.g. `(Schritt 3)` / `(step 3)`) and rejoins the flow
 after its own steps. The diagram updates as you type (debounced) and is rendered entirely in-process with
 the MIT-licensed PlantUML build and the Smetana layout engine — no Graphviz installation, no external
-rendering service, the spec content never leaves the IDE. Both `## Main Success Scenario` and
-`## Hauptszenario` headings are recognised.
+rendering service, the spec content never leaves the IDE.
+
+Both English and German spec styles are recognised: `## Main Success Scenario` / `## Hauptszenario` /
+`## Hauptablauf` for the main flow, and `## Alternative Flows` / `## Alternativszenarien` /
+`## Alternativabläufe` for the alternative flows. Flow headings may carry a label (`### A1: …`, branching
+at the step the `**Trigger:**` references) or a step code in the German style (`### 3a. Keine Treffer
+gefunden`, branching directly at step 3). Sub-bullets under a numbered step are treated as detail and
+kept out of the step's diagram node.
 
 ### Gutter icons
 
@@ -51,12 +57,13 @@ In Markdown specs:
 
 * `**Use Case ID:** UC-XXX` jumps to all test methods annotated with that ID.
 * `# Title` (H1) jumps to the test class(es) containing those methods.
-* `## Main Success Scenario` jumps to test methods with no `scenario` attribute (or `scenario = "Main Success
-  Scenario"`).
-* `### A1: ...` (alternative-flow headings of the form `<Letter><Digits>`) jumps to test methods whose `scenario`
-  starts with that code.
-* `### BR-XXX` business rule headings jump to test methods that reference that rule via `businessRules = {"BR-XXX"}`,
-  scoped to the Use Case declared by the spec file (BR ids are unique only within a UC).
+* `## Main Success Scenario` / `## Hauptszenario` / `## Hauptablauf` jumps to test methods with no `scenario`
+  attribute (or one of those labels as the `scenario` value).
+* `### A1: ...` or `### 3a. ...` (alternative-flow headings coded as `<Letter><Digits>` or `<Step><letter>`) jumps to
+  test methods whose `scenario` starts with that code.
+* `### BR-XXX` business rule headings — or `- **GR-XXX:** …` bullet items in the German style — jump to test methods
+  that reference that rule via `businessRules = {"BR-XXX"}`, scoped to the Use Case declared by the spec file
+  (rule ids are unique only within a UC).
 
 ### Find Usages (Alt+F7)
 
@@ -87,12 +94,30 @@ The plugin works with the Markdown conventions from the AIUP PetClinic example:
 ### BR-001: Lazy Loading
 ```
 
-Use Case IDs may be plain `UC-XXX` or the `SUC-XXX` / `BUC-XXX` variants (System / Business Use Case). Spec files are
-matched two ways:
+and with the German AIUP spec style, which declares the ID in the title and codes alternative flows by step:
 
-* **By file name** — the ID at the start of the name (`UC-002-view-veterinarians.md`, `SUC-001-*.md`, `BUC-001-*.md`)
-  or after an arbitrary project prefix (`petclinic-UC-002-*.md`, `*-SUC-*.md`, `*-BUC-*.md`).
+```markdown
+# UC-001: Kunde suchen
+
+## Hauptablauf
+
+## Alternativabläufe
+
+### 3a. Keine Treffer gefunden
+
+## Geschäftsregeln
+
+- **GR-001:** Inaktive Kunden werden standardmässig nicht angezeigt.
+```
+
+Use Case IDs may be plain `UC-XXX` or the `SUC-XXX` / `BUC-XXX` variants (System / Business Use Case). Spec files are
+matched three ways:
+
+* **By file name** — the ID at the start of the name (`UC-002-view-veterinarians.md`,
+  `UC-032_Kundeninformationen_bearbeiten.md`, `SUC-001-*.md`, `BUC-001-*.md`) or after an arbitrary project prefix
+  (`petclinic-UC-002-*.md`, `*-SUC-*.md`, `*-BUC-*.md`).
 * **By body line** — a `**Use Case ID:** UC-XXX` declaration anywhere in the file.
+* **By title** — an H1 starting with the ID, e.g. `# UC-001: Kunde suchen` (used when no body line exists).
 
 See [Setup](#setup) above for the matching Java annotation shape.
 

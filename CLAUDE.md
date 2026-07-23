@@ -32,20 +32,22 @@ The plugin is three Kotlin files in `src/main/kotlin/ai/unifiedprocess/tools/ij/
     1. The `@UseCase` annotation is resolved by **short name** via `PsiShortNamesCache` (filtered to annotation types),
        not by FQN — so the plugin works in any project that defines an annotation called `UseCase`, regardless of
        package.
-    2. Spec files are matched two ways: filename (`UC-002-*.md`, `SUC-*/BUC-*` variants, each optionally behind a
-       project prefix like `petclinic-UC-002-*.md`) **or** content match against the regex `**Use Case ID:** UC-XXX`.
-       Content match reads the file via `contentsToByteArray()` on every call — fine for typical AIUP repos but a
-       known scaling concern (see README "Notes").
+    2. Spec files are matched three ways: filename (`UC-002-*.md` or `UC-032_*.md`, `SUC-*/BUC-*` variants, each
+       optionally behind a project prefix like `petclinic-UC-002-*.md`), content match against the regex
+       `**Use Case ID:** UC-XXX`, **or** — as a fallback — the H1 title (`# UC-001: Kunde suchen`, the German spec
+       style). Content match reads the file via `contentsToByteArray()` on every call — fine for typical AIUP repos
+       but a known scaling concern (see README "Notes").
 
 - **`UseCaseToSpecLineMarkerProvider`** (Java line marker): triggers only on the `PsiIdentifier` leaf of an annotation
   reference (e.g. the `UseCase` token in `@UseCase(...)`), per IntelliJ's contract that markers must anchor to leaves.
   Reads the `id` attribute as a `PsiLiteralExpression` and delegates lookup to `UseCaseIndex`.
 
 - **`SpecToUseCaseLineMarkerProvider`** (Markdown line marker): Markdown PSI is unstable across IDE versions, so this
-  provider does **plain-text regex matching on leaf elements** rather than navigating the AST. Two patterns are
-  recognised: `**Use Case ID:** UC-XXX` and headings `### BR-XXX`. The `isFirstMatchingLeafOnLine` helper walks
-  `PsiTreeUtil.prevLeaf` back to the document line start to suppress duplicate markers when a regex match spans multiple
-  PSI leaves on the same line — keep this guard if you add more Markdown patterns.
+  provider does **plain-text regex matching on leaf elements** rather than navigating the AST. Recognised sites:
+  `**Use Case ID:** UC-XXX` lines, the H1 title, main-flow headings, alt-flow headings (`### A1: …` / `### 3a. …`),
+  and business-rule sites (`### BR-XXX` headings or `- **GR-XXX:** …` bullets). The `isFirstMatchingLeafOnLine` helper
+  walks `PsiTreeUtil.prevLeaf` back to the document line start to suppress duplicate markers when a regex match spans
+  multiple PSI leaves on the same line — keep this guard if you add more Markdown patterns.
 
 ## Convention contract with consumer projects
 
@@ -54,16 +56,21 @@ The plugin assumes the host project follows this shape (from the `aiup-petclinic
 - Java annotation named `UseCase` (annotation type) with attributes `id: String`, `scenario: String`,
   `businessRules: String[]`.
 - Use Case IDs are `UC-XXX` or the `SUC-XXX` / `BUC-XXX` variants (System / Business Use Case).
-- Markdown specs anywhere in the project content scope, identified by either filename (`UC-XXX-*.md`, `SUC-*`/`BUC-*`
-  variants, optionally behind a project prefix such as `petclinic-UC-XXX-*.md`) or a body line
-  `**Use Case ID:** UC-XXX`.
-- Business rules declared as Markdown headings of the form `### BR-XXX`.
-- The main flow heading may be either `Main Success Scenario` (English) or `Hauptszenario` (German); the
-  `scenario` attribute on `@UseCase` accepts both labels (case-insensitive) as the main flow.
+- Markdown specs anywhere in the project content scope, identified by filename (`UC-XXX-*.md` or `UC-XXX_*.md`,
+  `SUC-*`/`BUC-*` variants, optionally behind a project prefix such as `petclinic-UC-XXX-*.md`), a body line
+  `**Use Case ID:** UC-XXX`, or an H1 title starting with the ID (`# UC-001: Kunde suchen`).
+- Business rules declared as Markdown headings of the form `### BR-XXX`, or — in the German spec style — as bold
+  bullet items `- **GR-XXX:** …`.
+- The main flow heading may be `Main Success Scenario` (English), `Hauptszenario` or `Hauptablauf` (German); the
+  `scenario` attribute on `@UseCase` accepts all three labels (case-insensitive) as the main flow.
+- Alternative flows are coded `A1`/`A2` (`### A1: …`, branching at the step the `**Trigger:**` references) or in the
+  German step-coded style `3a`/`5a` (`### 3a. Keine Treffer gefunden`, branching directly at that step); the
+  `scenario` attribute accepts either code as prefix (e.g. `scenario = "3a: Keine Treffer gefunden"`).
 
-The ID/filename patterns live centrally in `UseCaseIndex` (`USE_CASE_ID_LINE`, `SPEC_FILE_NAME`);
-`SpecToUseCaseLineMarkerProvider`, `UseCaseDeclarationProvider`, and `UseCaseUsageSearcher` reference
-`UseCaseIndex.USE_CASE_ID_LINE` rather than defining their own copies — keep it that way when changing the patterns.
+The ID/filename/heading patterns live centrally in `UseCaseIndex` (`USE_CASE_ID_LINE`, `USE_CASE_TITLE`,
+`SPEC_FILE_NAME`, `MAIN_SCENARIO_HEADING`, `ALT_FLOW_HEADING`, `BUSINESS_RULE_SITE`, `SCENARIO_CODE`);
+`SpecToUseCaseLineMarkerProvider`, `UseCaseDeclarationProvider`, and `UseCaseUsageSearcher` reference those shared
+values rather than defining their own copies — keep it that way when changing the patterns.
 
 ## Known inconsistency
 
