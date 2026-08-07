@@ -139,8 +139,8 @@ object CreateUseCaseAnnotationAction {
 
     private fun notifyError(project: Project, message: String) {
         NotificationGroupManager.getInstance()
-            .getNotificationGroup("AIUP")
-            .createNotification("AIUP", message, NotificationType.ERROR)
+            .getNotificationGroup("AI Unified Process")
+            .createNotification("AI Unified Process", message, NotificationType.ERROR)
             .notify(project)
     }
 }

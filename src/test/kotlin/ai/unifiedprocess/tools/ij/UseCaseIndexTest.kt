@@ -1,6 +1,6 @@
 package ai.unifiedprocess.tools.ij
 
-class UseCaseIndexTest : AiupTestBase() {
+class UseCaseIndexTest : UnifiedProcessTestBase() {
 
     fun testFindSpecFilesMatchesByFilenamePrefix() {
         val spec = myFixture.addFileToProject(

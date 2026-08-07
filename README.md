@@ -1,10 +1,10 @@
 # AI Unified Process Navigator
 
 IntelliJ plugin to navigate between `@UseCase`-annotated Java test methods and their Markdown specs in
-[AI Unified Process (AIUP)](https://unifiedprocess.ai) projects — with a live activity diagram of the
+[AI Unified Process](https://unifiedprocess.ai) projects — with a live activity diagram of the
 Use Case spec you are editing.
 
-![AIUP Diagram tool window rendering the activity diagram of a Use Case spec](docs/aiup-diagram-tool-window.png)
+![AI Unified Process Diagram tool window rendering the activity diagram of a Use Case spec](docs/ai-unified-process-diagram-tool-window.png)
 
 ## Setup
 
@@ -32,7 +32,7 @@ you.
 
 ### Activity diagram tool window
 
-The **AIUP Diagram** tool window (right-hand side) shows a live PlantUML activity diagram of the Use Case
+The **AI Unified Process Diagram** tool window (right-hand side) shows a live PlantUML activity diagram of the Use Case
 spec in the selected editor: the main flow forms the numbered spine, and every Alternative
 Flow branches at the step its trigger references (e.g. `(Schritt 3)` / `(step 3)`) and rejoins the flow
 after its own steps. The diagram updates as you type (debounced) and is rendered entirely in-process with
@@ -80,7 +80,7 @@ Find Usages is wired in both directions, mirroring the gutter icons:
 
 ## Conventions used
 
-The plugin works with the Markdown conventions from the AIUP PetClinic example:
+The plugin works with the Markdown conventions from the AI Unified Process PetClinic example:
 
 ```markdown
 # View Veterinarians
@@ -94,7 +94,7 @@ The plugin works with the Markdown conventions from the AIUP PetClinic example:
 ### BR-001: Lazy Loading
 ```
 
-and with the German AIUP spec style, which declares the ID in the title and codes alternative flows by step:
+and with the German AI Unified Process spec style, which declares the ID in the title and codes alternative flows by step:
 
 ```markdown
 # UC-001: Kunde suchen
@@ -151,5 +151,5 @@ platform dependency in `build.gradle.kts` if you need a different range. Require
 ## Notes
 
 * The spec lookup scans Markdown files in the project. For very large projects you may want to add an index later. For
-  typical AIUP repos the scan is fast enough because the spec folder is small.
+  typical AI Unified Process repos the scan is fast enough because the spec folder is small.
 * If you rename the annotation, the lookup still works as long as it is called `UseCase` and is an annotation type.

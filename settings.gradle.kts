@@ -1,1 +1,1 @@
-rootProject.name = "aiup-intellij-plugin"
+rootProject.name = "ai-unified-process-intellij-plugin"

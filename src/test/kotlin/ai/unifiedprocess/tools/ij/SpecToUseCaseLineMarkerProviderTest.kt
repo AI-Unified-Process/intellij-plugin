@@ -1,6 +1,6 @@
 package ai.unifiedprocess.tools.ij
 
-class SpecToUseCaseLineMarkerProviderTest : AiupTestBase() {
+class SpecToUseCaseLineMarkerProviderTest : UnifiedProcessTestBase() {
 
     fun testGutterOnUseCaseIdLineLinksToTests() {
         myFixture.addFileToProject(

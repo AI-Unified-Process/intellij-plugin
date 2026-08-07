@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project
 
 IntelliJ IDEA plugin (Kotlin, JVM 21) that adds gutter-icon navigation between `@UseCase`-annotated Java test methods
-and their Markdown specs in AIUP (AI Unified Process) projects. Built with the JetBrains
+and their Markdown specs in AI Unified Process projects. Built with the JetBrains
 `org.jetbrains.intellij.platform` Gradle plugin.
 
 ## Common commands
@@ -35,7 +35,7 @@ The plugin is three Kotlin files in `src/main/kotlin/ai/unifiedprocess/tools/ij/
     2. Spec files are matched three ways: filename (`UC-002-*.md` or `UC-032_*.md`, `SUC-*/BUC-*` variants, each
        optionally behind a project prefix like `petclinic-UC-002-*.md`), content match against the regex
        `**Use Case ID:** UC-XXX`, **or** — as a fallback — the H1 title (`# UC-001: Kunde suchen`, the German spec
-       style). Content match reads the file via `contentsToByteArray()` on every call — fine for typical AIUP repos
+       style). Content match reads the file via `contentsToByteArray()` on every call — fine for typical AI Unified Process repos
        but a known scaling concern (see README "Notes").
 
 - **`UseCaseToSpecLineMarkerProvider`** (Java line marker): triggers only on the `PsiIdentifier` leaf of an annotation

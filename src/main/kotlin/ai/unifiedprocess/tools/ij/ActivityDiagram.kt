@@ -6,7 +6,7 @@ package ai.unifiedprocess.tools.ij
  * alternative flow branches at the step its trigger references and rejoins the flow
  * after its own steps.
  *
- * This is a Kotlin port of the AIUP Studio's `ActivityDiagram` generator, fed by a
+ * This is a Kotlin port of the AI Unified Process Studio's `ActivityDiagram` generator, fed by a
  * lenient Markdown reader instead of the Studio's strict parser — the preview should
  * render whatever it can read, not reject the file. The diagram is a view only; the
  * Markdown spec stays the single source of truth.

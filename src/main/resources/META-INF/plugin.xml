@@ -8,7 +8,7 @@
         live activity diagram of the Use Case you are editing.
 
         <h3>Live activity diagram</h3>
-        <p>The <b>AIUP Diagram</b> tool window renders a PlantUML activity diagram of the Use Case spec
+        <p>The <b>AI Unified Process Diagram</b> tool window renders a PlantUML activity diagram of the Use Case spec
         (<code>UC-*.md</code>, <code>SUC-*.md</code>, <code>BUC-*.md</code>) in the selected editor: the Main Success Scenario is the spine, every
         Alternative Flow branches at the step its trigger references. The diagram updates as you type and
         is rendered entirely in-process (MIT-licensed PlantUML with the Smetana engine) — no Graphviz, no
@@ -27,7 +27,7 @@
         with attributes <code>id</code>, <code>scenario</code>, and <code>businessRules</code>. If the
         plugin sees Markdown specs in a project but no such annotation, it offers a one-time balloon
         with a "Create UseCase.java" action that scaffolds the file into a chosen source root.</p>
-        <p>Works with the <a href="https://unifiedprocess.ai">AI Unified Process (AIUP)</a> methodology.</p>
+        <p>Works with the <a href="https://unifiedprocess.ai">AI Unified Process</a> methodology.</p>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -35,7 +35,7 @@
     <depends>org.intellij.plugins.markdown</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="AIUP" displayType="BALLOON"/>
+        <notificationGroup id="AI Unified Process" displayType="BALLOON"/>
 
         <postStartupActivity
                 implementation="ai.unifiedprocess.tools.ij.UseCaseAnnotationSetupActivity"/>
@@ -52,7 +52,7 @@
                 language="JAVA"
                 shortName="UseCaseIdHasNoSpec"
                 displayName="Use Case ID has no matching spec"
-                groupName="AIUP"
+                groupName="AI Unified Process"
                 enabledByDefault="true"
                 level="WARNING"
                 implementationClass="ai.unifiedprocess.tools.ij.UseCaseIdInspection"/>
@@ -65,7 +65,7 @@
                 implementationClass="ai.unifiedprocess.tools.ij.UseCaseUsageSearcher"/>
 
         <toolWindow
-                id="AIUP Diagram"
+                id="AI Unified Process Diagram"
                 anchor="right"
                 secondary="true"
                 icon="AllIcons.Toolwindows.ToolWindowHierarchy"

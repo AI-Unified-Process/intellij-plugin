@@ -23,9 +23,9 @@ class UseCaseAnnotationSetupActivity : ProjectActivity {
         if (!hasSpecs) return
 
         val notification = NotificationGroupManager.getInstance()
-            .getNotificationGroup("AIUP")
+            .getNotificationGroup("AI Unified Process")
             .createNotification(
-                "AIUP: @UseCase annotation missing",
+                "AI Unified Process: @UseCase annotation missing",
                 "This project has Use Case specs but no <code>UseCase</code> annotation type. " +
                     "The plugin needs a Java annotation called <code>UseCase</code> with " +
                     "<code>id</code>, <code>scenario</code>, and <code>businessRules</code> attributes " +
@@ -51,6 +51,6 @@ class UseCaseAnnotationSetupActivity : ProjectActivity {
     }
 
     companion object {
-        private const val DISMISSED_KEY = "aiup.useCase.scaffoldNotificationDismissed"
+        private const val DISMISSED_KEY = "unifiedprocess.useCase.scaffoldNotificationDismissed"
     }
 }

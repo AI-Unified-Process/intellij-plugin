@@ -49,12 +49,12 @@ intellijPlatform {
         changeNotes = """
             <h3>0.8.0</h3>
             <ul>
-                <li>Support the German AIUP spec style end to end: the Use Case ID may be declared in the
+                <li>Support the German AI Unified Process spec style end to end: the Use Case ID may be declared in the
                     H1 title (<code># UC-001: Kunde suchen</code>) instead of a <code>**Use Case ID:**</code>
                     line, spec file names may use underscores (<code>UC-032_Kundeninformationen_bearbeiten.md</code>),
                     and <code>## Hauptablauf</code> / <code>## Alternativabläufe</code> are recognised alongside
                     the English headings.</li>
-                <li>AIUP Diagram: step-coded alternative-flow headings like
+                <li>AI Unified Process Diagram: step-coded alternative-flow headings like
                     <code>### 3a. Keine Treffer gefunden</code> branch directly at their step (no
                     <code>**Trigger:**</code> field needed); sub-bullets under a numbered step are treated as
                     detail and kept out of the step's diagram node.</li>
@@ -69,11 +69,11 @@ intellijPlatform {
                     (System / Business Use Case), and all three ID forms behind an arbitrary project prefix
                     (<code>*-UC-*.md</code>, <code>*-SUC-*.md</code>, <code>*-BUC-*.md</code>). SUC-/BUC- IDs are
                     also accepted in the <code>**Use Case ID:**</code> body line, gutter navigation, Find Usages,
-                    the spec inspection, and the AIUP Diagram tool window.</li>
+                    the spec inspection, and the AI Unified Process Diagram tool window.</li>
             </ul>
             <h3>0.6.2</h3>
             <ul>
-                <li>Restructured the Marketplace description: the "AIUP Diagram" tool window is now presented
+                <li>Restructured the Marketplace description: the "AI Unified Process Diagram" tool window is now presented
                     as its own section instead of a bullet in the navigation list.</li>
             </ul>
             <h3>0.6.1</h3>
@@ -85,7 +85,7 @@ intellijPlatform {
             </ul>
             <h3>0.6.0</h3>
             <ul>
-                <li>New "AIUP Diagram" tool window: shows a live PlantUML activity diagram of the Use Case spec
+                <li>New "AI Unified Process Diagram" tool window: shows a live PlantUML activity diagram of the Use Case spec
                     in the selected editor, generated from the Main Success Scenario and the Alternative Flows
                     and rendered in-process (MIT-licensed PlantUML with the Smetana engine — no Graphviz, no
                     external service).</li>

@@ -1,6 +1,6 @@
 package ai.unifiedprocess.tools.ij
 
-class UseCaseIdInspectionTest : AiupTestBase() {
+class UseCaseIdInspectionTest : UnifiedProcessTestBase() {
 
     override fun setUp() {
         super.setUp()

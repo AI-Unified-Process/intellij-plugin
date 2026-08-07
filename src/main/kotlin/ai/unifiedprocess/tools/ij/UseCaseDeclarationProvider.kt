@@ -9,7 +9,7 @@ import com.intellij.psi.util.PsiTreeUtil
 
 /**
  * Declares `UseCaseSymbol` / `BusinessRuleSymbol` / `ScenarioSymbol` at every
- * AIUP-relevant site so Alt+F7 can resolve a target there.
+ * AI Unified Process-relevant site so Alt+F7 can resolve a target there.
  *
  * Java sites:
  *  - `@UseCase(id = "UC-XXX")` literal -> UseCaseSymbol

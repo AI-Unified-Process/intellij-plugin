@@ -11,12 +11,12 @@ internal fun List<GutterMark>.tooltips(): List<String> = mapNotNull { it.tooltip
     .map { it.removePrefix("<html>").removeSuffix("</html>").trim() }
 
 /**
- * Base class for AIUP plugin tests. Adds a project-local `UseCase` annotation
+ * Base class for the plugin's tests. Adds a project-local `UseCase` annotation
  * to mimic the convention contract from real consumer projects. Individual
  * tests skip [addUseCaseAnnotation] when they want to assert behavior in a
  * project that has *no* annotation (e.g. the setup-activity probe).
  */
-abstract class AiupTestBase : BasePlatformTestCase() {
+abstract class UnifiedProcessTestBase : BasePlatformTestCase() {
 
     protected open val withUseCaseAnnotation: Boolean get() = true
 

@@ -15,7 +15,7 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch
  *    (System / Business Use Case).
  *  - Spec files are Markdown files declaring the ID via the body line
  *    `**Use Case ID:** UC-XXX` or via the H1 title (`# UC-001: Kunde suchen`,
- *    the German AIUP spec style). We also accept the ID in the file name as a
+ *    the German AI Unified Process spec style). We also accept the ID in the file name as a
  *    fallback, optionally preceded by a project prefix and separated by `-`
  *    or `_` (e.g. `petclinic-UC-002-view.md`, `UC-032_Kunden_bearbeiten.md`).
  *  - Test methods are annotated with `@UseCase(id = "UC-XXX", ...)`.
@@ -30,7 +30,7 @@ object UseCaseIndex {
 
     /**
      * H1 title that declares the Use Case ID directly, e.g. `# UC-001: Kunde
-     * suchen` — the German AIUP spec style, which has no `**Use Case ID:**`
+     * suchen` — the German AI Unified Process spec style, which has no `**Use Case ID:**`
      * body line. Only consulted as a fallback when no body line exists.
      */
     val USE_CASE_TITLE = Regex("""^#[ \t]+([SB]?UC-[A-Za-z0-9_-]+)""", RegexOption.MULTILINE)

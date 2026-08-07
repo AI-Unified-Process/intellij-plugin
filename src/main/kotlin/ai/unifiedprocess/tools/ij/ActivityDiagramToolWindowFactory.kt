@@ -31,7 +31,7 @@ import javax.swing.SwingConstants
  * Tool window that shows the activity diagram of the Use Case spec in the selected
  * editor: the diagram is regenerated from the Main Success Scenario and the Alternative
  * Flows on every edit (debounced) and rendered in-process, mirroring the live preview
- * of the AIUP Studio's use case editor.
+ * of the AI Unified Process Studio's use case editor.
  */
 class ActivityDiagramToolWindowFactory : ToolWindowFactory, DumbAware {
 
@@ -95,7 +95,7 @@ private class ActivityDiagramPanel(
             trackingDisposable?.let(Disposer::dispose)
             trackingDisposable = null
             trackedDocument = document?.also {
-                val disposable = Disposer.newDisposable(this, "AIUP diagram document tracking")
+                val disposable = Disposer.newDisposable(this, "AI Unified Process diagram document tracking")
                 trackingDisposable = disposable
                 it.addDocumentListener(documentListener, disposable)
             }
