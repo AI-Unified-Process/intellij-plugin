@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.8.0"
+version = "0.8.1"
 
 repositories {
     mavenCentral()
@@ -47,6 +47,14 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.8.1</h3>
+            <ul>
+                <li>Use the full "AI Unified Process" name everywhere instead of the standalone "AIUP"
+                    trademark: the tool window is now called "AI Unified Process Diagram", and the
+                    notification group and inspection group appear as "AI Unified Process" in Settings.
+                    The tool window keeps its behaviour; its saved position resets once because of the
+                    rename.</li>
+            </ul>
             <h3>0.8.0</h3>
             <ul>
                 <li>Support the German AI Unified Process spec style end to end: the Use Case ID may be declared in the
