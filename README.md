@@ -1,6 +1,7 @@
 # AI Unified Process Navigator
 
-IntelliJ plugin to navigate between `@UseCase`-annotated Java test methods and their Markdown specs in
+IntelliJ plugin to navigate between `@UseCase`-annotated test methods — Java, Kotlin, or any JVM
+language the IDE reads through UAST — and their Markdown specs in
 [AI Unified Process](https://unifiedprocess.ai) projects — with a live activity diagram of the
 Use Case spec you are editing.
 
@@ -8,8 +9,9 @@ Use Case spec you are editing.
 
 ## Setup
 
-The plugin requires the host project to define a Java annotation type named `UseCase`. It is looked up by short name, so
-any package works. The canonical shape is:
+The plugin requires the host project to define an annotation type named `UseCase`. It is looked up by short name, so
+any package works — and either language will do, since the lookup goes through the IDE's short-name index. The canonical
+shape is:
 
 ```java
 @Target(ElementType.METHOD)
@@ -22,6 +24,19 @@ public @interface UseCase {
 
     String[] businessRules() default {};
 }
+```
+
+or the same thing as a Kotlin `annotation class`:
+
+```kotlin
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@MustBeDocumented
+annotation class UseCase(
+    val id: String,
+    val scenario: String = "Main Success Scenario",
+    val businessRules: Array<String> = [],
+)
 ```
 
 When the plugin opens a project that contains Markdown Use Case specs but no `UseCase` annotation type, it shows a
@@ -48,10 +63,10 @@ kept out of the step's diagram node.
 
 ### Gutter icons
 
-In Java:
+In test code (Java, Kotlin, or any other language with a UAST implementation):
 
 * `@UseCase(id = "UC-XXX")` jumps to the matching spec file, landing on the scenario heading and any business
-  rule headings referenced via `businessRules = {...}`.
+  rule headings referenced via `businessRules = {...}` (`[...]` in Kotlin).
 
 In Markdown specs:
 
@@ -119,7 +134,7 @@ matched three ways:
 * **By body line** — a `**Use Case ID:** UC-XXX` declaration anywhere in the file.
 * **By title** — an H1 starting with the ID, e.g. `# UC-001: Kunde suchen` (used when no body line exists).
 
-See [Setup](#setup) above for the matching Java annotation shape.
+See [Setup](#setup) above for the matching annotation shape.
 
 ## Build
 

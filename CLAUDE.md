@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-IntelliJ IDEA plugin (Kotlin, JVM 21) that adds gutter-icon navigation between `@UseCase`-annotated Java test methods
+IntelliJ IDEA plugin (Kotlin, JVM 21) that adds gutter-icon navigation between `@UseCase`-annotated test methods
 and their Markdown specs in AI Unified Process projects. Built with the JetBrains
 `org.jetbrains.intellij.platform` Gradle plugin.
 
@@ -38,9 +38,12 @@ The plugin is three Kotlin files in `src/main/kotlin/ai/unifiedprocess/tools/ij/
        style). Content match reads the file via `contentsToByteArray()` on every call — fine for typical AI Unified Process repos
        but a known scaling concern (see README "Notes").
 
-- **`UseCaseToSpecLineMarkerProvider`** (Java line marker): triggers only on the `PsiIdentifier` leaf of an annotation
-  reference (e.g. the `UseCase` token in `@UseCase(...)`), per IntelliJ's contract that markers must anchor to leaves.
-  Reads the `id` attribute as a `PsiLiteralExpression` and delegates lookup to `UseCaseIndex`.
+- **`UseCaseToSpecLineMarkerProvider`** (UAST line marker): registered for the `UAST` meta-language, so one provider
+  serves Java, Kotlin and every other language with a UAST implementation. It triggers only on the leaf whose text is
+  the annotation's short name (e.g. the `UseCase` token in `@UseCase(...)`), per IntelliJ's contract that markers must
+  anchor to leaves — and that leaf must have a reference parent, which is what tells the name token apart from a Kotlin
+  string value reading `"UseCase"`. Attributes are read as `UAnnotation` values via `UseCaseIndex`, never as
+  `PsiLiteralExpression`: the Java model does not cover other languages.
 
 - **`SpecToUseCaseLineMarkerProvider`** (Markdown line marker): Markdown PSI is unstable across IDE versions, so this
   provider does **plain-text regex matching on leaf elements** rather than navigating the AST. Recognised sites:
@@ -53,8 +56,8 @@ The plugin is three Kotlin files in `src/main/kotlin/ai/unifiedprocess/tools/ij/
 
 The plugin assumes the host project follows this shape (from the `aiup-petclinic` example):
 
-- Java annotation named `UseCase` (annotation type) with attributes `id: String`, `scenario: String`,
-  `businessRules: String[]`.
+- Annotation type named `UseCase` — Java or Kotlin — with attributes `id: String`, `scenario: String`,
+  `businessRules: String[]`. Tests carrying it may be written in any language the IDE exposes through UAST.
 - Use Case IDs are `UC-XXX` or the `SUC-XXX` / `BUC-XXX` variants (System / Business Use Case).
 - Markdown specs anywhere in the project content scope, identified by filename (`UC-XXX-*.md` or `UC-XXX_*.md`,
   `SUC-*`/`BUC-*` variants, optionally behind a project prefix such as `petclinic-UC-XXX-*.md`), a body line
