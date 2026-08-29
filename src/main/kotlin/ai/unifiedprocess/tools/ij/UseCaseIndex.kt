@@ -6,6 +6,11 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
+import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UExpressionList
+import org.jetbrains.uast.toUElementOfType
 
 /**
  * Helpers to find Use Case specs and tests for a given ID.
@@ -21,6 +26,12 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch
  *  - Test methods are annotated with `@UseCase(id = "UC-XXX", ...)`.
  */
 object UseCaseIndex {
+
+    /** Short name of the annotation the host project declares (see the README's Setup section). */
+    const val ANNOTATION_NAME = "UseCase"
+
+    /** The name as written at an annotation site, with any package qualifier dropped. */
+    private val ANNOTATION_REFERENCE = Regex("""^@\s*(?:\w+\s*\.\s*)*(\w+)""")
 
     /**
      * Matches the `**Use Case ID:** UC-XXX` declaration line; shared by every
@@ -240,11 +251,22 @@ object UseCaseIndex {
      * "points at": the scenario heading (Main Success Scenario or `### A1:`),
      * plus one leaf per business rule heading.
      */
-    fun findSpecLeavesForAnnotation(project: Project, annotation: PsiAnnotation): List<PsiElement> {
-        val useCaseId = getStringAttribute(annotation, "id") ?: return emptyList()
-        val scenario = getStringAttribute(annotation, "scenario")
-        val brIds = getStringArrayAttribute(annotation, "businessRules")
+    fun findSpecLeavesForAnnotation(project: Project, annotation: UAnnotation): List<PsiElement> {
+        val useCaseId = attributeString(annotation, "id") ?: return emptyList()
+        return findSpecLeaves(
+            project,
+            useCaseId,
+            scenario = attributeString(annotation, "scenario"),
+            brIds = attributeStrings(annotation, "businessRules"),
+        )
+    }
 
+    fun findSpecLeaves(
+        project: Project,
+        useCaseId: String,
+        scenario: String?,
+        brIds: List<String>,
+    ): List<PsiElement> {
         val scenarioCode = scenario
             ?.takeIf { it.isNotBlank() && !isMainScenarioLabel(it) }
             ?.let { scenarioPrefix(it) }
@@ -319,12 +341,49 @@ object UseCaseIndex {
         return null
     }
 
+    /**
+     * Recognises the annotation by short name, the same convention
+     * [findUseCaseAnnotationClass] uses — so `@UseCase` is understood wherever it is declared, in
+     * any language with a UAST implementation.
+     */
+    fun isUseCaseAnnotation(annotation: UAnnotation): Boolean {
+        val qualified = annotation.qualifiedName
+        if (qualified != null) {
+            return qualified == ANNOTATION_NAME || qualified.endsWith(".$ANNOTATION_NAME")
+        }
+        // Unresolved: the annotation type is not on the module's classpath. Reading the name as
+        // written keeps the inspection working in the project that has yet to declare it.
+        val written = annotation.sourcePsi?.text ?: return false
+        return ANNOTATION_REFERENCE.find(written)?.groupValues?.get(1) == ANNOTATION_NAME
+    }
+
+    /** Value of a single-string attribute (`id`, `scenario`), or null when it is absent. */
+    fun attributeString(annotation: UAnnotation, name: String): String? =
+        annotation.findAttributeValue(name)?.evaluate() as? String
+
+    /** Values of a string-array attribute (`businessRules`), which may also be written bare. */
+    fun attributeStrings(annotation: UAnnotation, name: String): List<String> {
+        val value = annotation.findAttributeValue(name) ?: return emptyList()
+        return arrayElements(value).mapNotNull { it.evaluate() as? String }
+    }
+
+    /**
+     * The elements of an array-valued attribute. Java writes one as `{...}` and Kotlin as `[...]`,
+     * which UAST models as a call and an expression list respectively; a bare value counts as an
+     * array of one, since `businessRules = "BR-001"` means the same as `{"BR-001"}`.
+     */
+    fun arrayElements(value: UExpression): List<UExpression> = when (value) {
+        is UCallExpression -> value.valueArguments
+        is UExpressionList -> value.expressions
+        else -> listOf(value)
+    }
+
     private fun findUseCaseAnnotationClass(project: Project): com.intellij.psi.PsiClass? {
         val scope = GlobalSearchScope.allScope(project)
         // Annotation lives in a project-specific package, so we look it up
         // by its short name. We require it to be an annotation type.
         val classes = com.intellij.psi.search.PsiShortNamesCache.getInstance(project)
-            .getClassesByName("UseCase", scope)
+            .getClassesByName(ANNOTATION_NAME, scope)
         return classes.firstOrNull { it.isAnnotationType }
     }
 
@@ -333,6 +392,9 @@ object UseCaseIndex {
         if (value is PsiLiteralExpression) {
             return value.value as? String
         }
+        // A test written in another UAST language arrives here as a light annotation whose values
+        // are not Java literals; UAST evaluates them without this having to know the language.
+        (value.toUElementOfType<UExpression>()?.evaluate() as? String)?.let { return it }
         // For computed expressions, fall back to text without quotes
         return value.text?.trim('"')
     }
@@ -349,6 +411,11 @@ object UseCaseIndex {
         // Single value case: @UseCase(businessRules = "BR-001")
         if (value is PsiLiteralExpression) {
             return listOfNotNull(value.value as? String)
+        }
+        // Same light-annotation case as getStringAttribute: read the array through UAST.
+        value.toUElementOfType<UExpression>()?.let { uValue ->
+            (uValue.evaluate() as? String)?.let { return listOf(it) }
+            return arrayElements(uValue).mapNotNull { it.evaluate() as? String }
         }
         return emptyList()
     }

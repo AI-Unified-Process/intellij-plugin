@@ -21,6 +21,9 @@ dependencies {
         // Bundled plugins we need
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.intellij.plugins.markdown")
+        // Not used by the plugin's own code, which reads annotations through UAST: this is what
+        // gives the tests a Kotlin language to parse, and the sandbox IDE one to try it in.
+        bundledPlugin("org.jetbrains.kotlin")
 
         pluginVerifier()
         zipSigner()

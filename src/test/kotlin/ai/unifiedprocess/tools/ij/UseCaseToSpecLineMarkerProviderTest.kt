@@ -29,6 +29,65 @@ class UseCaseToSpecLineMarkerProviderTest : UnifiedProcessTestBase() {
         )
     }
 
+    fun testGutterAppearsOnKotlinUseCaseAnnotation() {
+        myFixture.addFileToProject(
+            "docs/UC-001-greeting.md",
+            "# Greeting\n\n**Use Case ID:** UC-001\n",
+        )
+        val testFile = myFixture.addFileToProject(
+            "src/test/kotlin/example/PetTest.kt",
+            """
+            package example
+
+            import ai.unifiedprocess.tools.UseCase
+
+            class PetTest {
+                @UseCase(id = "UC-001")
+                fun greet() {}
+            }
+            """.trimIndent(),
+        )
+        myFixture.configureFromExistingVirtualFile(testFile.virtualFile)
+
+        val tooltips = myFixture.findAllGutters().tooltips()
+        assertEquals(
+            "expected exactly one 'Go to spec for UC-001' gutter, got $tooltips",
+            1,
+            tooltips.count { it.contains("Go to spec for UC-001") },
+        )
+    }
+
+    // The Kotlin form of a string is a template whose contents are a leaf of their own, so a value
+    // reading "UseCase" looks just like the annotation's name token. Only the name token may carry
+    // the marker, or the annotation would be marked twice.
+    fun testKotlinStringValueMatchingTheAnnotationNameIsNotMarked() {
+        myFixture.addFileToProject(
+            "docs/UC-001-greeting.md",
+            "# Greeting\n\n**Use Case ID:** UC-001\n",
+        )
+        val testFile = myFixture.addFileToProject(
+            "src/test/kotlin/example/NamedTest.kt",
+            """
+            package example
+
+            import ai.unifiedprocess.tools.UseCase
+
+            class NamedTest {
+                @UseCase(id = "UC-001", scenario = "UseCase")
+                fun greet() {}
+            }
+            """.trimIndent(),
+        )
+        myFixture.configureFromExistingVirtualFile(testFile.virtualFile)
+
+        val tooltips = myFixture.findAllGutters().tooltips()
+        assertEquals(
+            "expected exactly one UC-001 gutter, got $tooltips",
+            1,
+            tooltips.count { it.contains("Go to spec for UC-001") },
+        )
+    }
+
     fun testNoGutterWhenSpecMissing() {
         val testFile = myFixture.addFileToProject(
             "src/test/java/example/OrphanTest.java",

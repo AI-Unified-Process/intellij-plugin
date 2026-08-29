@@ -5,13 +5,16 @@ import com.intellij.model.psi.PsiSymbolDeclaration
 import com.intellij.model.psi.PsiSymbolDeclarationProvider
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
-import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.ULiteralExpression
+import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.toUElementOfType
 
 /**
  * Declares `UseCaseSymbol` / `BusinessRuleSymbol` / `ScenarioSymbol` at every
  * AI Unified Process-relevant site so Alt+F7 can resolve a target there.
  *
- * Java sites:
+ * Annotation sites (any language UAST covers — Java, Kotlin, …):
  *  - `@UseCase(id = "UC-XXX")` literal -> UseCaseSymbol
  *  - `@UseCase(scenario = "A1: ...")` literal -> ScenarioSymbol
  *  - `@UseCase(businessRules = {"BR-XXX"})` literal -> BusinessRuleSymbol
@@ -30,34 +33,51 @@ class UseCaseDeclarationProvider : PsiSymbolDeclarationProvider {
         element: PsiElement,
         offsetInElement: Int,
     ): Collection<PsiSymbolDeclaration> {
-        javaDeclaration(element)?.let { return listOf(it) }
+        annotationDeclaration(element)?.let { return listOf(it) }
         return markdownDeclarations(element, offsetInElement)
     }
 
-    private fun javaDeclaration(element: PsiElement): PsiSymbolDeclaration? {
-        val literal = element as? PsiLiteralExpression ?: return null
-        val value = literal.value as? String ?: return null
+    private fun annotationDeclaration(element: PsiElement): PsiSymbolDeclaration? {
+        val literal = element.toUElementOfType<ULiteralExpression>() ?: return null
+        // Declare on the element that owns the string and no other: the platform offers every
+        // ancestor of the caret, and each language nests its literals differently.
+        if (literal.sourcePsi !== element) return null
+        val value = literal.evaluate() as? String ?: return null
 
-        val pair = PsiTreeUtil.getParentOfType(literal, PsiNameValuePair::class.java) ?: return null
-        val ann = PsiTreeUtil.getParentOfType(pair, PsiAnnotation::class.java) ?: return null
-        if (!isUseCaseAnnotation(ann)) return null
+        val annotation = literal.getParentOfType<UAnnotation>() ?: return null
+        if (!UseCaseIndex.isUseCaseAnnotation(annotation)) return null
 
-        val ucId = (ann.findAttributeValue("id") as? PsiLiteralExpression)?.value as? String
-            ?: return null
+        val ucId = UseCaseIndex.attributeString(annotation, "id") ?: return null
         val project = element.project
 
-        val symbol: Symbol = when (pair.name) {
+        val symbol: Symbol = when (annotation.attributeNameOf(literal)) {
             "id" -> UseCaseSymbol(project, ucId)
             "businessRules" -> BusinessRuleSymbol(project, ucId, value)
             "scenario" -> ScenarioSymbol(project, ucId, scenarioPrefix(value))
             else -> return null
         }
 
-        // Range inside the literal that excludes the surrounding quotes.
-        val length = literal.textLength
-        if (length < 2) return null
-        val rangeInElement = TextRange(1, length - 1)
-        return SimpleDeclaration(literal, rangeInElement, symbol)
+        val rangeInElement = element.rangeInsideQuotes() ?: return null
+        return SimpleDeclaration(element, rangeInElement, symbol)
+    }
+
+    /**
+     * Which attribute a value was written for, decided by source position rather than by identity:
+     * UAST rebuilds its elements per conversion, so the same literal is not the same instance twice.
+     */
+    private fun UAnnotation.attributeNameOf(value: ULiteralExpression): String? {
+        val target = value.sourcePsi?.textRange ?: return null
+        return attributeValues.firstOrNull { attribute ->
+            attribute.expression.sourcePsi?.textRange?.contains(target) == true
+        }?.name
+    }
+
+    /** The range inside a string literal that excludes its quotes, whichever quoting the language uses. */
+    private fun PsiElement.rangeInsideQuotes(): TextRange? {
+        val text = text ?: return null
+        val quote = QUOTE_FORMS.firstOrNull { text.length >= 2 * it.length && text.startsWith(it) && text.endsWith(it) }
+            ?: return null
+        return TextRange(quote.length, text.length - quote.length)
     }
 
     private fun markdownDeclarations(
@@ -129,14 +149,12 @@ class UseCaseDeclarationProvider : PsiSymbolDeclarationProvider {
         return listOf(SimpleDeclaration(element, rangeInElement, symbol))
     }
 
-    private fun isUseCaseAnnotation(ann: PsiAnnotation): Boolean {
-        val qn = ann.qualifiedName ?: return false
-        return qn == "UseCase" || qn.endsWith(".UseCase")
-    }
-
     private fun scenarioPrefix(scenario: String): String? = UseCaseIndex.scenarioPrefix(scenario)
 
     private companion object {
+        // Longest first: a Kotlin raw string starts with the one-character form too.
+        val QUOTE_FORMS = listOf("\"\"\"", "\"")
+
         val USE_CASE_ID_LINE = UseCaseIndex.USE_CASE_ID_LINE
         val BR_HEADING = UseCaseIndex.BUSINESS_RULE_SITE
         val ALT_FLOW_HEADING = UseCaseIndex.ALT_FLOW_HEADING

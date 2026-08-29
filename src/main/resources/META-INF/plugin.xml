@@ -23,7 +23,10 @@
             <li>Gutter icon on <code>### BR-XXX</code> business rule headers jumps to tests referencing that rule</li>
             <li>Find Usages (Alt+F7) works in both directions, and an inspection flags Use Case IDs without a spec</li>
         </ul>
-        <p><b>Setup:</b> the host project must define a Java annotation type called <code>UseCase</code>
+        <p>Tests may be written in Java or Kotlin — the annotation is read through UAST, so any JVM
+        language the IDE supports works the same way.</p>
+
+        <p><b>Setup:</b> the host project must define an annotation type called <code>UseCase</code>
         with attributes <code>id</code>, <code>scenario</code>, and <code>businessRules</code>. If the
         plugin sees Markdown specs in a project but no such annotation, it offers a one-time balloon
         with a "Create UseCase.java" action that scaffolds the file into a chosen source root.</p>
@@ -40,8 +43,10 @@
         <postStartupActivity
                 implementation="ai.unifiedprocess.tools.ij.UseCaseAnnotationSetupActivity"/>
 
+        <!-- UAST rather than JAVA: the same provider then serves every language with a UAST
+             implementation, so a Kotlin test carrying @UseCase gets the icon a Java one does. -->
         <codeInsight.lineMarkerProvider
-                language="JAVA"
+                language="UAST"
                 implementationClass="ai.unifiedprocess.tools.ij.UseCaseToSpecLineMarkerProvider"/>
 
         <codeInsight.lineMarkerProvider
@@ -49,7 +54,7 @@
                 implementationClass="ai.unifiedprocess.tools.ij.SpecToUseCaseLineMarkerProvider"/>
 
         <localInspection
-                language="JAVA"
+                language="UAST"
                 shortName="UseCaseIdHasNoSpec"
                 displayName="Use Case ID has no matching spec"
                 groupName="AI Unified Process"

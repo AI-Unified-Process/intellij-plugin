@@ -209,6 +209,32 @@ class UseCaseIndexTest : UnifiedProcessTestBase() {
         assertEquals("main", methods[0].name)
     }
 
+    // The spec -> test direction goes through the Java view of the project, which for a Kotlin test
+    // is a light method. This pins that the annotation's values can still be read from there.
+    fun testFindTestMethodsResolvesKotlinAnnotations() {
+        myFixture.addFileToProject(
+            "src/test/kotlin/example/PetTest.kt",
+            """
+            package example
+
+            import ai.unifiedprocess.tools.UseCase
+
+            class PetTest {
+                @UseCase(id = "UC-001", businessRules = ["BR-001"])
+                fun main() {}
+
+                @UseCase(id = "UC-002")
+                fun other() {}
+            }
+            """.trimIndent(),
+        )
+
+        val methods = UseCaseIndex.findTestMethods(project, "UC-001")
+        assertEquals(1, methods.size)
+        assertEquals("main", methods[0].name)
+        assertEquals(1, UseCaseIndex.findTestMethodsForBusinessRule(project, "UC-001", "BR-001").size)
+    }
+
     fun testFindTestMethodsForBusinessRule() {
         myFixture.addFileToProject(
             "src/test/java/example/RuleTest.java",
