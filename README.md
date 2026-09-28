@@ -46,6 +46,22 @@ at the step the `**Trigger:**` references) or a step code in the German style (`
 gefunden`, branching directly at step 3). Sub-bullets under a numbered step are treated as detail and
 kept out of the step's diagram node.
 
+### BPMN editor
+
+`*.bpmn` files (BPMN 2.0 process models) open in the same bpmn-js modeler the AI Unified Process Studio uses:
+palette and canvas next to the properties panel of the selected element. The diagram is the first editor tab,
+the XML is still available in the **Text** tab; both edit the same document, so an edit in the diagram is an
+ordinary, undoable change of the file, and an edit of the XML is picked up by the diagram. Opening a file
+imports it unchanged — it is only rewritten once you edit the diagram. Read-only files open in the navigable
+viewer without palette and properties panel. The editor runs in the IDE's embedded browser (JCEF) from files
+bundled with the plugin — nothing is loaded from the network; without JCEF, `.bpmn` files open as XML only.
+
+The editor toolbar exports the shown diagram, unsaved edits included, as **SVG** or as **PNG** (twice the size,
+on white), as in the studio.
+
+In the Markdown preview, ` ```bpmn ` code fences holding BPMN 2.0 XML are shown as read-only diagrams instead of
+code; a fence that cannot be displayed shows the cause. The Markdown source is not touched.
+
 ### Gutter icons
 
 In Java:
@@ -127,7 +143,9 @@ See [Setup](#setup) above for the matching Java annotation shape.
 ./gradlew build
 ```
 
-The plugin zip will be in `build/distributions/`.
+The plugin zip will be in `build/distributions/`. The build downloads Node.js (via the
+`com.github.node-gradle.node` plugin) to bundle the BPMN editor in `bpmn-editor/` with esbuild; no local Node
+installation is needed.
 
 ## Try it locally
 

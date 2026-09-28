@@ -6,3 +6,5 @@ build/
 .kotlin/
 
 .intellijPlatform/
+bpmn-editor/node_modules/
+bpmn-editor/out/

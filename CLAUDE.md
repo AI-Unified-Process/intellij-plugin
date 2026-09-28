@@ -24,7 +24,7 @@ in `build.gradle.kts` and `intellijPlatform.pluginConfiguration.ideaVersion`.
 
 ## Architecture
 
-The plugin is three Kotlin files in `src/main/kotlin/ai/unifiedprocess/tools/ij/`, registered as IntelliJ extensions in
+The plugin's Kotlin sources live in `src/main/kotlin/ai/unifiedprocess/tools/ij/`, registered as IntelliJ extensions in
 `src/main/resources/META-INF/plugin.xml`.
 
 - **`UseCaseIndex`** (object): all PSI/VFS lookups live here. Two design choices that propagate through the rest of the
@@ -48,6 +48,23 @@ The plugin is three Kotlin files in `src/main/kotlin/ai/unifiedprocess/tools/ij/
   and business-rule sites (`### BR-XXX` headings or `- **GR-XXX:** …` bullets). The `isFirstMatchingLeafOnLine` helper
   walks `PsiTreeUtil.prevLeaf` back to the document line start to suppress duplicate markers when a regex match spans
   multiple PSI leaves on the same line — keep this guard if you add more Markdown patterns.
+
+- **BPMN editor** (`BpmnFileEditor.kt`): `BpmnEditorProvider` opens `*.bpmn` files (mapped to the XML file type
+  in `plugin.xml`) in a JCEF browser, placed before the text editor. The page is the bpmn-js modeler + properties
+  panel from the AI Unified Process Studio (`../studio/src/main/frontend/bpmn-editor.ts`), kept in `bpmn-editor/`
+  and bundled by esbuild (`bpmn-editor/build.mjs`, Gradle task `buildBpmnEditor`) into one self-contained
+  `/bpmn-editor/editor.html` resource. The IDE replaces the `/*AIUP_BRIDGE*/` placeholder with a `JBCefJSQuery`
+  function (`window.aiupBpmnSend`); the page sends `ready` / `changed:<xml>`, the IDE calls
+  `window.aiupBpmn.setXml/init`. Diagram edits replace the document text in a write command; document edits are
+  pushed back debounced. The editor toolbar's SVG/PNG export asks the page (`exportSvg`/`exportPng`), which answers
+  `svg:<svg>` / `png:<base64>` / `export-failed:<message>`. Keep the bpmn-js versions in `bpmn-editor/package.json`
+  in line with the studio.
+
+- **BPMN Markdown fences** (`BpmnMarkdownPreview.kt`, `bpmn-editor/src/preview.ts`): a
+  `MarkdownBrowserPreviewExtension` loads `/bpmn-editor/preview.js` into every Markdown preview. The script hides
+  each `pre > code.language-bpmn` and inserts a rendering after it, re-inserting it after every incremental-DOM patch
+  from a source-keyed cache. It deliberately does **not** use `CodeFenceGeneratingProvider` — that interface is
+  `@ApiStatus.Internal` and fails the plugin verifier.
 
 ## Convention contract with consumer projects
 

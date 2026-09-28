@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.3.21"
     id("org.jetbrains.intellij.platform") version "2.15.0"
+    id("com.github.node-gradle.node") version "7.1.0"
 }
 
 group = "ai.unifiedprocess.tools"
@@ -166,6 +167,29 @@ kotlin {
         // defaults) even though the source never references them.
         jvmDefault = org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode.NO_COMPATIBILITY
     }
+}
+
+// The BPMN editor is the bpmn-js modeler of the AI Unified Process Studio, bundled by esbuild
+// into one self-contained HTML page that the plugin loads into the IDE's embedded browser.
+node {
+    download = true
+    version = "24.21.0"
+    nodeProjectDir = file("bpmn-editor")
+    npmInstallCommand = "ci"
+}
+
+val bpmnEditorOutput = layout.buildDirectory.dir("generated/bpmn-editor")
+
+val buildBpmnEditor by tasks.registering(com.github.gradle.node.npm.task.NpmTask::class) {
+    dependsOn(tasks.npmInstall)
+    args = listOf("run", "build", "--", bpmnEditorOutput.get().file("bpmn-editor/editor.html").asFile.absolutePath)
+    inputs.dir("bpmn-editor/src")
+    inputs.files("bpmn-editor/build.mjs", "bpmn-editor/package.json", "bpmn-editor/package-lock.json")
+    outputs.dir(bpmnEditorOutput)
+}
+
+sourceSets.main {
+    resources.srcDir(buildBpmnEditor)
 }
 
 tasks {
