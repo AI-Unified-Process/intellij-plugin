@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.9.1"
+version = "0.10.0"
 
 repositories {
     mavenCentral()
@@ -48,6 +48,12 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.10.0</h3>
+            <ul>
+                <li>BPMN editor: an activity named after a use case (<code>UC-004 Find Owners</code>) opens its
+                    specification from the new "Open use case" entry of its context pad, or by a click in the
+                    read-only viewer.</li>
+            </ul>
             <h3>0.9.1</h3>
             <ul>
                 <li>BPMN files open on the Diagram tab instead of the tab used last.</li>
