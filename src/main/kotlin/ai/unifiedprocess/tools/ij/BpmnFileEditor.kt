@@ -9,6 +9,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.event.DocumentEvent
@@ -25,6 +27,7 @@ import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -35,6 +38,7 @@ import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
 import com.intellij.util.Alarm
+import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
 import java.beans.PropertyChangeListener
@@ -88,7 +92,8 @@ class BpmnEditorSelector : FileEditorManagerListener {
  * the document text in an undoable command, an edit of the text is imported into the
  * diagram (debounced). Opening a file imports it unchanged, so it is never marked
  * modified until the user edits it. The toolbar exports the shown diagram, unsaved edits
- * included, as SVG or as PNG (twice the size, on white), as in the studio.
+ * included, as SVG or as PNG (twice the size, on white), as in the studio. An activity
+ * named after a use case (`UC-004 Find Owners`) opens its spec from the diagram.
  */
 private class BpmnFileEditor(
     private val project: Project,
@@ -147,10 +152,12 @@ private class BpmnFileEditor(
             message == "ready" -> {
                 val readOnly = document == null || !document.isWritable
                 syncedText = document?.text.orEmpty()
-                execute("window.aiupBpmn.setXml(${jsString(syncedText!!)}); window.aiupBpmn.init($readOnly);")
+                val useCaseRef = jsString(UseCaseIndex.ACTIVITY_USE_CASE_REF.pattern)
+                execute("window.aiupBpmn.setXml(${jsString(syncedText!!)}); window.aiupBpmn.init($readOnly, $useCaseRef);")
             }
 
             message.startsWith(CHANGED_PREFIX) -> applyDiagramEdit(message.removePrefix(CHANGED_PREFIX))
+            message.startsWith(OPEN_USE_CASE_PREFIX) -> openUseCase(message.removePrefix(OPEN_USE_CASE_PREFIX))
             message.startsWith(SVG_PREFIX) -> writeExport(message.removePrefix(SVG_PREFIX).toByteArray())
             message.startsWith(PNG_PREFIX) -> writeExport(Base64.getDecoder().decode(message.removePrefix(PNG_PREFIX)))
             message.startsWith(EXPORT_FAILED_PREFIX) -> {
@@ -159,6 +166,33 @@ private class BpmnFileEditor(
                     NotificationType.ERROR)
             }
         }
+    }
+
+    /** Opens the spec of [useCaseId], lets the user choose between several, or reports that there is none. */
+    private fun openUseCase(useCaseId: String) {
+        ReadAction.nonBlocking<List<VirtualFile>> { UseCaseIndex.findSpecFiles(project, useCaseId) }
+            .expireWith(this)
+            .finishOnUiThread(ModalityState.defaultModalityState()) { specs ->
+                when (specs.size) {
+                    0 -> notify("No specification found for use case $useCaseId.", NotificationType.WARNING)
+                    1 -> FileEditorManager.getInstance(project).openFile(specs.first(), true)
+                    else -> JBPopupFactory.getInstance()
+                        .createPopupChooserBuilder(specs.sortedBy { it.path })
+                        .setTitle("Specifications of $useCaseId")
+                        .setRenderer { list, spec, _, isSelected, _ ->
+                            JBLabel(spec.presentableUrl).apply {
+                                isOpaque = true
+                                border = JBUI.Borders.empty(2, 8)
+                                background = if (isSelected) list.selectionBackground else list.background
+                                foreground = if (isSelected) list.selectionForeground else list.foreground
+                            }
+                        }
+                        .setItemChosenCallback { FileEditorManager.getInstance(project).openFile(it, true) }
+                        .createPopup()
+                        .showInCenterOf(component)
+                }
+            }
+            .submit(AppExecutorUtil.getAppExecutorService())
     }
 
     private fun createToolbar(target: JComponent): JComponent {
@@ -268,6 +302,7 @@ private class BpmnFileEditor(
         const val BRIDGE_PLACEHOLDER = "/*AIUP_BRIDGE*/"
         const val CHANGED_PREFIX = "changed:"
         const val SVG_PREFIX = "svg:"
+        const val OPEN_USE_CASE_PREFIX = "open-use-case:"
         const val PNG_PREFIX = "png:"
         const val EXPORT_FAILED_PREFIX = "export-failed:"
         const val NOTIFICATION_GROUP = "AI Unified Process"

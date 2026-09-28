@@ -59,6 +59,10 @@ bundled with the plugin — nothing is loaded from the network; without JCEF, `.
 The editor toolbar exports the shown diagram, unsaved edits included, as **SVG** or as **PNG** (twice the size,
 on white), as in the studio.
 
+An activity whose name starts with a Use Case ID — `UC-004 Find Owners by Last Name`, `UC-001: Kunde suchen`,
+or the `SUC-`/`BUC-` variants — links to its spec: select it and click **Open use case** in its context pad (in
+the read-only viewer, click the activity). If several specs match, a chooser opens.
+
 In the Markdown preview, ` ```bpmn ` code fences holding BPMN 2.0 XML are shown as read-only diagrams instead of
 code; a fence that cannot be displayed shows the cause. The Markdown source is not touched.
 

@@ -58,7 +58,9 @@ The plugin's Kotlin sources live in `src/main/kotlin/ai/unifiedprocess/tools/ij/
   function (`window.aiupBpmnSend`); the page sends `ready` / `changed:<xml>`, the IDE calls
   `window.aiupBpmn.setXml/init`. Diagram edits replace the document text in a write command; document edits are
   pushed back debounced. The editor toolbar's SVG/PNG export asks the page (`exportSvg`/`exportPng`), which answers
-  `svg:<svg>` / `png:<base64>` / `export-failed:<message>`. Keep the bpmn-js versions in `bpmn-editor/package.json`
+  `svg:<svg>` / `png:<base64>` / `export-failed:<message>`. An activity whose name starts with a Use Case ID
+  (`UC-004 Find Owners`, pattern `ACTIVITY_USE_CASE_REF`, handed to the page in `init`) gets an "Open use case"
+  context pad entry (a click in the read-only viewer); the page sends `open-use-case:<id>` and the IDE opens the spec. Keep the bpmn-js versions in `bpmn-editor/package.json`
   in line with the studio.
 
 - **BPMN Markdown fences** (`BpmnMarkdownPreview.kt`, `bpmn-editor/src/preview.ts`): a
@@ -85,7 +87,7 @@ The plugin assumes the host project follows this shape (from the `aiup-petclinic
   German step-coded style `3a`/`5a` (`### 3a. Keine Treffer gefunden`, branching directly at that step); the
   `scenario` attribute accepts either code as prefix (e.g. `scenario = "3a: Keine Treffer gefunden"`).
 
-The ID/filename/heading patterns live centrally in `UseCaseIndex` (`USE_CASE_ID_LINE`, `USE_CASE_TITLE`,
+The ID/filename/heading patterns live centrally in `UseCaseIndex` (`USE_CASE_ID_LINE`, `USE_CASE_TITLE`, `ACTIVITY_USE_CASE_REF`,
 `SPEC_FILE_NAME`, `MAIN_SCENARIO_HEADING`, `ALT_FLOW_HEADING`, `BUSINESS_RULE_SITE`, `SCENARIO_CODE`);
 `SpecToUseCaseLineMarkerProvider`, `UseCaseDeclarationProvider`, and `UseCaseUsageSearcher` reference those shared
 values rather than defining their own copies — keep it that way when changing the patterns.

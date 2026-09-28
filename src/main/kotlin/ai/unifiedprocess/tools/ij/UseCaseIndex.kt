@@ -36,6 +36,14 @@ object UseCaseIndex {
     val USE_CASE_TITLE = Regex("""^#[ \t]+([SB]?UC-[A-Za-z0-9_-]+)""", RegexOption.MULTILINE)
 
     /**
+     * Name of a BPMN activity that references a use case by leading ID, e.g.
+     * `UC-004 Find Owners by Last Name` or `UC-004: …`. The BPMN editor page
+     * receives this pattern as a JavaScript regex, so keep it free of
+     * Java-only syntax.
+     */
+    val ACTIVITY_USE_CASE_REF = Regex("""^\s*([SB]?UC-[A-Za-z0-9_-]*[A-Za-z0-9])""")
+
+    /**
      * Heading of the main flow section: `Main Success Scenario` (English),
      * `Hauptszenario` or `Hauptablauf` (German).
      */

@@ -15,9 +15,14 @@ import './editor.css';
  * the user serializes the model again and reports it — importing fires no command, so
  * opening a file never marks it changed.
  *
+ * An activity named after a use case ("UC-004 Find Owners") opens its spec: from the
+ * context pad in the modeler, by a click in the viewer. The IDE passes the name pattern
+ * to init, so it stays the one of UseCaseIndex.
+ *
  * Bridge: the IDE calls window.aiupBpmn.init/setXml/exportSvg/exportPng; the page
  * answers through window.aiupBpmnSend (injected by the IDE) with "ready",
- * "changed:<xml>", "svg:<svg>", "png:<base64>" and "export-failed:<message>" messages.
+ * "changed:<xml>", "open-use-case:<id>", "svg:<svg>", "png:<base64>" and
+ * "export-failed:<message>" messages.
  */
 
 type Viewer = Modeler | NavigatedViewer;
@@ -26,7 +31,7 @@ declare global {
   interface Window {
     aiupBpmnSend?: (message: string) => void;
     aiupBpmn: {
-      init(readOnly: boolean): void;
+      init(readOnly: boolean, useCaseRef: string): void;
       setXml(xml: string): void;
       exportSvg(): void;
       exportPng(): void;
@@ -43,6 +48,8 @@ let broken = false;
 let debounce: number | undefined;
 // the diagram is fitted once the canvas has a size: in a background editor tab it has none
 let fitPending = false;
+// the leading use case ID of an activity name, group 1
+let useCaseRef: RegExp | null = null;
 
 const canvas = document.getElementById('canvas')!;
 const panel = document.getElementById('properties')!;
@@ -52,16 +59,21 @@ function send(message: string): void {
   window.aiupBpmnSend?.(message);
 }
 
-function init(readOnly: boolean): void {
+function init(readOnly: boolean, useCaseRefSource: string): void {
   if (viewer) return;
+  useCaseRef = new RegExp(useCaseRefSource);
   if (readOnly) {
     panel.remove();
     viewer = new NavigatedViewer({ container: canvas });
+    viewer.on('element.click', (event: { element: any }) => {
+      const id = useCaseId(event.element);
+      if (id) send('open-use-case:' + id);
+    });
   } else {
     const modeler = new Modeler({
       container: canvas,
       propertiesPanel: { parent: panel },
-      additionalModules: [BpmnPropertiesPanelModule, BpmnPropertiesProviderModule],
+      additionalModules: [BpmnPropertiesPanelModule, BpmnPropertiesProviderModule, UseCaseContextPadModule],
     } as any);
     modeler.on('commandStack.changed', (event: { trigger?: string }) => {
       // clearing the stack on an import is no edit of the user
@@ -73,6 +85,47 @@ function init(readOnly: boolean): void {
   }
   void importXml();
 }
+
+/** The use case an activity references by the leading ID of its name, if any. */
+function useCaseId(element: any): string | null {
+  const business = element?.businessObject;
+  if (!useCaseRef || !business || element.labelTarget || !business.$instanceOf?.('bpmn:Activity')) return null;
+  return useCaseRef.exec(business.name ?? '')?.[1] ?? null;
+}
+
+const OPEN_USE_CASE_ICON =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="#000" stroke-width="1.2">' +
+      '<path d="M3.5 1.5h6l3 3v10h-9z"/><path d="M9.5 1.5v3h3M5.5 8h5M5.5 10.5h5M5.5 13h3"/></svg>',
+  );
+
+/** Adds "Open use case" to the context pad of an activity that references one. */
+class UseCaseContextPad {
+  static $inject = ['contextPad'];
+
+  constructor(contextPad: any) {
+    contextPad.registerProvider(this);
+  }
+
+  getContextPadEntries(element: any): Record<string, unknown> {
+    const id = useCaseId(element);
+    if (!id) return {};
+    return {
+      'aiup.open-use-case': {
+        group: 'aiup',
+        imageUrl: OPEN_USE_CASE_ICON,
+        title: `Open use case ${id}`,
+        action: { click: () => send('open-use-case:' + id) },
+      },
+    };
+  }
+}
+
+const UseCaseContextPadModule = {
+  __init__: ['aiupUseCaseContextPad'],
+  aiupUseCaseContextPad: ['type', UseCaseContextPad],
+};
 
 function setXml(xml: string): void {
   const value = xml ?? '';
@@ -105,6 +158,7 @@ async function importXml(): Promise<void> {
       fitPending = true;
       fitToViewport();
     }
+    markUseCases();
     imported = true;
     broken = false;
     showError(
@@ -118,6 +172,15 @@ async function importXml(): Promise<void> {
     broken = true;
     const message = error instanceof Error ? error.message : String(error);
     showError(`The BPMN file cannot be displayed: ${message} — fix the XML in the Text tab.`, 'error');
+  }
+}
+
+/** Shows the activities that open a use case with a pointer in the viewer. */
+function markUseCases(): void {
+  if (!viewer || viewer instanceof Modeler) return;
+  const drawing = viewer.get('canvas') as any;
+  for (const element of (viewer.get('elementRegistry') as any).getAll()) {
+    if (useCaseId(element)) drawing.addMarker(element, 'aiup-use-case');
   }
 }
 

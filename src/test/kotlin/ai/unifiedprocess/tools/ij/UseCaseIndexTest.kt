@@ -156,6 +156,18 @@ class UseCaseIndexTest : UnifiedProcessTestBase() {
         assertFalse(UseCaseIndex.isSpecFileName("RUC-001-not-a-spec"))
     }
 
+    fun testActivityUseCaseRefReadsTheLeadingId() {
+        fun ref(name: String) = UseCaseIndex.ACTIVITY_USE_CASE_REF.find(name)?.groupValues?.get(1)
+
+        assertEquals("UC-004", ref("UC-004 Find Owners by Last Name"))
+        assertEquals("UC-001", ref("UC-001: Kunde suchen"))
+        assertEquals("SUC-002", ref(" SUC-002 View Owners"))
+        assertEquals("BUC-001", ref("BUC-001"))
+
+        assertNull(ref("Find Owners (UC-004)"))
+        assertNull(ref("RUC-001 Not a use case"))
+    }
+
     fun testFindSpecFilesReturnsEmptyWhenNoMatch() {
         myFixture.addFileToProject("docs/UC-001-greeting.md", "# Greeting\n")
 

@@ -51,3 +51,8 @@ body {
   background: #fff8e1;
   color: #8a5a00;
 }
+
+/* an activity that opens its use case by a click in the read-only viewer */
+.djs-element.aiup-use-case {
+  cursor: pointer;
+}
