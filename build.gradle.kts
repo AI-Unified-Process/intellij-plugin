@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.9.0"
+version = "0.9.1"
 
 repositories {
     mavenCentral()
@@ -48,6 +48,12 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.9.1</h3>
+            <ul>
+                <li>BPMN files open on the Diagram tab instead of the tab used last.</li>
+                <li>Fixed "Failed to execute 'scale' on 'SVGMatrix'" when a BPMN file was opened with the
+                    Text tab selected: the diagram is now fitted once its tab is shown.</li>
+            </ul>
             <h3>0.9.0</h3>
             <ul>
                 <li>BPMN editor: <code>*.bpmn</code> process models open in the bpmn-js modeler of the
