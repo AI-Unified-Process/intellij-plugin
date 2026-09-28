@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.8.1"
+version = "0.9.0"
 
 repositories {
     mavenCentral()
@@ -48,6 +48,18 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.9.0</h3>
+            <ul>
+                <li>BPMN editor: <code>*.bpmn</code> process models open in the bpmn-js modeler of the
+                    AI Unified Process Studio — palette, canvas, and properties panel — with the XML still
+                    available in the Text tab. Both tabs edit the same document, so diagram edits are
+                    regular, undoable file changes; read-only files open in a view-only diagram. The editor
+                    runs in the IDE's embedded browser (JCEF) from files bundled with the plugin — nothing is
+                    loaded from the network.</li>
+                <li>Export the diagram, unsaved edits included, as SVG or PNG from the editor toolbar.</li>
+                <li><code>```bpmn</code> fences in Markdown are shown as read-only BPMN diagrams in the
+                    Markdown preview.</li>
+            </ul>
             <h3>0.8.1</h3>
             <ul>
                 <li>Use the full "AI Unified Process" name everywhere instead of the standalone "AIUP"
