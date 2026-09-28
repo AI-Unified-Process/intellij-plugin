@@ -85,6 +85,12 @@
                 implementation="ai.unifiedprocess.tools.ij.BpmnEditorProvider"/>
     </extensions>
 
+    <projectListeners>
+        <!-- *.bpmn files open on the diagram, not on the tab used last. -->
+        <listener class="ai.unifiedprocess.tools.ij.BpmnEditorSelector"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+
     <extensions defaultExtensionNs="org.intellij.markdown">
         <!-- ```bpmn fences render as read-only BPMN diagrams in the Markdown preview. -->
         <browserPreviewExtensionProvider

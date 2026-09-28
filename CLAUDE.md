@@ -50,7 +50,8 @@ The plugin's Kotlin sources live in `src/main/kotlin/ai/unifiedprocess/tools/ij/
   multiple PSI leaves on the same line — keep this guard if you add more Markdown patterns.
 
 - **BPMN editor** (`BpmnFileEditor.kt`): `BpmnEditorProvider` opens `*.bpmn` files (mapped to the XML file type
-  in `plugin.xml`) in a JCEF browser, placed before the text editor. The page is the bpmn-js modeler + properties
+  in `plugin.xml`) in a JCEF browser, placed before the text editor; `BpmnEditorSelector` selects that
+  Diagram tab whenever a `.bpmn` file is opened (the IDE would otherwise restore the tab used last). The page is the bpmn-js modeler + properties
   panel from the AI Unified Process Studio (`../studio/src/main/frontend/bpmn-editor.ts`), kept in `bpmn-editor/`
   and bundled by esbuild (`bpmn-editor/build.mjs`, Gradle task `buildBpmnEditor`) into one self-contained
   `/bpmn-editor/editor.html` resource. The IDE replaces the `/*AIUP_BRIDGE*/` placeholder with a `JBCefJSQuery`

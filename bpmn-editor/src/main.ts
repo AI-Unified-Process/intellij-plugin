@@ -41,6 +41,8 @@ let imported = false;
 // while the XML cannot be displayed, an edit of the stale diagram must not overwrite it
 let broken = false;
 let debounce: number | undefined;
+// the diagram is fitted once the canvas has a size: in a background editor tab it has none
+let fitPending = false;
 
 const canvas = document.getElementById('canvas')!;
 const panel = document.getElementById('properties')!;
@@ -97,10 +99,11 @@ async function importXml(): Promise<void> {
       await current.createDiagram();
     }
     if (sequence !== importSequence) return;
-    if (viewbox) {
+    if (viewbox && !fitPending) {
       drawing.viewbox(viewbox);
     } else {
-      drawing.zoom('fit-viewport', 'auto');
+      fitPending = true;
+      fitToViewport();
     }
     imported = true;
     broken = false;
@@ -117,6 +120,19 @@ async function importXml(): Promise<void> {
     showError(`The BPMN file cannot be displayed: ${message} — fix the XML in the Text tab.`, 'error');
   }
 }
+
+/** Fits the diagram into the canvas, or on its next resize while it has no size (fitting then divides by zero). */
+function fitToViewport(): void {
+  if (!viewer || !fitPending || canvas.clientWidth === 0 || canvas.clientHeight === 0) return;
+  fitPending = false;
+  (viewer.get('canvas') as any).zoom('fit-viewport', 'auto');
+}
+
+new ResizeObserver(() => {
+  if (!viewer) return;
+  (viewer.get('canvas') as any).resized();
+  fitToViewport();
+}).observe(canvas);
 
 function scheduleChange(): void {
   window.clearTimeout(debounce);

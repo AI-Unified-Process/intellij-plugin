@@ -17,6 +17,8 @@ import com.intellij.openapi.fileChooser.FileChooserFactory
 import com.intellij.openapi.fileChooser.FileSaverDescriptor
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.fileEditor.FileEditorPolicy
 import com.intellij.openapi.fileEditor.FileEditorProvider
 import com.intellij.openapi.fileEditor.FileEditorState
@@ -55,12 +57,29 @@ class BpmnEditorProvider : FileEditorProvider, DumbAware {
 
     override fun createEditor(project: Project, file: VirtualFile): FileEditor = BpmnFileEditor(project, file)
 
-    override fun getEditorTypeId(): String = "aiup-bpmn-editor"
+    override fun getEditorTypeId(): String = EDITOR_TYPE_ID
 
     override fun getPolicy(): FileEditorPolicy = FileEditorPolicy.PLACE_BEFORE_DEFAULT_EDITOR
 
     companion object {
         const val BPMN_EXTENSION = "bpmn"
+        const val EDITOR_TYPE_ID = "aiup-bpmn-editor"
+    }
+}
+
+/**
+ * Opening a `*.bpmn` file always shows the diagram: the IDE would otherwise reopen the
+ * tab used last for the file, which is often the XML text. Switching tabs of a file that
+ * is already open is left alone.
+ */
+class BpmnEditorSelector : FileEditorManagerListener {
+
+    override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
+        if (!file.extension.equals(BpmnEditorProvider.BPMN_EXTENSION, ignoreCase = true)) return
+        // the editors are selected once opening has finished
+        ApplicationManager.getApplication().invokeLater({
+            source.setSelectedEditor(file, BpmnEditorProvider.EDITOR_TYPE_ID)
+        }, source.project.disposed)
     }
 }
 
