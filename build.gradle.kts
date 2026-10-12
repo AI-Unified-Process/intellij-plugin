@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.10.0"
+version = "0.11.0"
 
 repositories {
     mavenCentral()
@@ -48,6 +48,10 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.11.0</h3>
+            <ul>
+                <li>BPMN editor: Zoom In, Zoom Out and Fit Diagram in the editor toolbar.</li>
+            </ul>
             <h3>0.10.0</h3>
             <ul>
                 <li>BPMN editor: an activity named after a use case (<code>UC-004 Find Owners</code>) opens its
