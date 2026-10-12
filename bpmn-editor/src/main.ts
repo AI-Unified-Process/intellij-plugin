@@ -19,7 +19,7 @@ import './editor.css';
  * context pad in the modeler, by a click in the viewer. The IDE passes the name pattern
  * to init, so it stays the one of UseCaseIndex.
  *
- * Bridge: the IDE calls window.aiupBpmn.init/setXml/exportSvg/exportPng; the page
+ * Bridge: the IDE calls window.aiupBpmn.init/setXml/zoom/exportSvg/exportPng; the page
  * answers through window.aiupBpmnSend (injected by the IDE) with "ready",
  * "changed:<xml>", "open-use-case:<id>", "svg:<svg>", "png:<base64>" and
  * "export-failed:<message>" messages.
@@ -27,12 +27,15 @@ import './editor.css';
 
 type Viewer = Modeler | NavigatedViewer;
 
+type ZoomStep = 'in' | 'out' | 'fit';
+
 declare global {
   interface Window {
     aiupBpmnSend?: (message: string) => void;
     aiupBpmn: {
       init(readOnly: boolean, useCaseRef: string): void;
       setXml(xml: string): void;
+      zoom(step: ZoomStep): void;
       exportSvg(): void;
       exportPng(): void;
     };
@@ -197,6 +200,19 @@ new ResizeObserver(() => {
   fitToViewport();
 }).observe(canvas);
 
+/**
+ * Zooms by the IDE toolbar: the wheel zoom of bpmn-js needs Ctrl/Cmd with the wheel or a
+ * pinch, which the embedded browser does not always receive.
+ */
+function zoom(step: ZoomStep): void {
+  if (!viewer || !imported) return;
+  if (step === 'fit') {
+    (viewer.get('canvas') as any).zoom('fit-viewport', 'auto');
+  } else {
+    (viewer.get('zoomScroll') as any).stepZoom(step === 'in' ? 1 : -1);
+  }
+}
+
 function scheduleChange(): void {
   window.clearTimeout(debounce);
   debounce = window.setTimeout(async () => {
@@ -254,5 +270,5 @@ async function saveSvg(): Promise<string> {
   return svg;
 }
 
-window.aiupBpmn = { init, setXml, exportSvg: () => void exportSvg(), exportPng: () => void exportPng() };
+window.aiupBpmn = { init, setXml, zoom, exportSvg: () => void exportSvg(), exportPng: () => void exportPng() };
 send('ready');

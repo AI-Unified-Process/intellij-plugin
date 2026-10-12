@@ -7,6 +7,7 @@ import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
@@ -45,6 +46,7 @@ import java.beans.PropertyChangeListener
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Base64
+import javax.swing.Icon
 import javax.swing.JComponent
 import javax.swing.JPanel
 
@@ -196,7 +198,14 @@ private class BpmnFileEditor(
     }
 
     private fun createToolbar(target: JComponent): JComponent {
-        val group = DefaultActionGroup(ExportAction(ExportFormat.SVG), ExportAction(ExportFormat.PNG))
+        val group = DefaultActionGroup(
+            ZoomAction("Zoom In", AllIcons.General.ZoomIn, "in"),
+            ZoomAction("Zoom Out", AllIcons.General.ZoomOut, "out"),
+            ZoomAction("Fit Diagram", AllIcons.General.FitContent, "fit"),
+            Separator.getInstance(),
+            ExportAction(ExportFormat.SVG),
+            ExportAction(ExportFormat.PNG),
+        )
         val toolbar = ActionManager.getInstance().createActionToolbar("AiupBpmnEditor", group, true)
         toolbar.targetComponent = target
         return toolbar.component
@@ -226,6 +235,17 @@ private class BpmnFileEditor(
         NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP)
             .createNotification(content, type)
             .notify(project)
+    }
+
+    private inner class ZoomAction(text: String, icon: Icon, private val step: String) : DumbAwareAction(text, text, icon) {
+
+        override fun getActionUpdateThread() = ActionUpdateThread.EDT
+
+        override fun update(event: AnActionEvent) {
+            event.presentation.isEnabled = syncedText != null
+        }
+
+        override fun actionPerformed(event: AnActionEvent) = execute("window.aiupBpmn.zoom('$step');")
     }
 
     private inner class ExportAction(private val format: ExportFormat) :

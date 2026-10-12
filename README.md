@@ -56,8 +56,8 @@ imports it unchanged — it is only rewritten once you edit the diagram. Read-on
 viewer without palette and properties panel. The editor runs in the IDE's embedded browser (JCEF) from files
 bundled with the plugin — nothing is loaded from the network; without JCEF, `.bpmn` files open as XML only.
 
-The editor toolbar exports the shown diagram, unsaved edits included, as **SVG** or as **PNG** (twice the size,
-on white), as in the studio.
+The editor toolbar zooms the diagram in and out and fits it into the editor, and it exports the shown diagram,
+unsaved edits included, as **SVG** or as **PNG** (twice the size, on white), as in the studio.
 
 An activity whose name starts with a Use Case ID — `UC-004 Find Owners by Last Name`, `UC-001: Kunde suchen`,
 or the `SUC-`/`BUC-` variants — links to its spec: select it and click **Open use case** in its context pad (in
