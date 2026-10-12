@@ -19,7 +19,9 @@ import './editor.css';
  * context pad in the modeler, by a click in the viewer. The IDE passes the name pattern
  * to init, so it stays the one of UseCaseIndex.
  *
- * Bridge: the IDE calls window.aiupBpmn.init/setXml/zoom/exportSvg/exportPng; the page
+ * The IDE toolbar collapses the properties panel to give the diagram the whole width.
+ *
+ * Bridge: the IDE calls window.aiupBpmn.init/setXml/zoom/showProperties/exportSvg/exportPng; the page
  * answers through window.aiupBpmnSend (injected by the IDE) with "ready",
  * "changed:<xml>", "open-use-case:<id>", "svg:<svg>", "png:<base64>" and
  * "export-failed:<message>" messages.
@@ -33,9 +35,10 @@ declare global {
   interface Window {
     aiupBpmnSend?: (message: string) => void;
     aiupBpmn: {
-      init(readOnly: boolean, useCaseRef: string): void;
+      init(readOnly: boolean, useCaseRef: string, propertiesVisible: boolean): void;
       setXml(xml: string): void;
       zoom(step: ZoomStep): void;
+      showProperties(visible: boolean): void;
       exportSvg(): void;
       exportPng(): void;
     };
@@ -62,8 +65,9 @@ function send(message: string): void {
   window.aiupBpmnSend?.(message);
 }
 
-function init(readOnly: boolean, useCaseRefSource: string): void {
+function init(readOnly: boolean, useCaseRefSource: string, propertiesVisible: boolean): void {
   if (viewer) return;
+  showProperties(propertiesVisible);
   useCaseRef = new RegExp(useCaseRefSource);
   if (readOnly) {
     panel.remove();
@@ -213,6 +217,11 @@ function zoom(step: ZoomStep): void {
   }
 }
 
+/** Shows or collapses the properties panel; the canvas takes its width through the resize observer. */
+function showProperties(visible: boolean): void {
+  panel.hidden = !visible;
+}
+
 function scheduleChange(): void {
   window.clearTimeout(debounce);
   debounce = window.setTimeout(async () => {
@@ -270,5 +279,5 @@ async function saveSvg(): Promise<string> {
   return svg;
 }
 
-window.aiupBpmn = { init, setXml, zoom, exportSvg: () => void exportSvg(), exportPng: () => void exportPng() };
+window.aiupBpmn = { init, setXml, zoom, showProperties, exportSvg: () => void exportSvg(), exportPng: () => void exportPng() };
 send('ready');

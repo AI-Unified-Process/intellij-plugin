@@ -1,6 +1,7 @@
 package ai.unifiedprocess.tools.ij
 
 import com.intellij.icons.AllIcons
+import com.intellij.ide.util.PropertiesComponent
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionManager
@@ -8,6 +9,7 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.Separator
+import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
@@ -95,7 +97,9 @@ class BpmnEditorSelector : FileEditorManagerListener {
  * diagram (debounced). Opening a file imports it unchanged, so it is never marked
  * modified until the user edits it. The toolbar exports the shown diagram, unsaved edits
  * included, as SVG or as PNG (twice the size, on white), as in the studio. An activity
- * named after a use case (`UC-004 Find Owners`) opens its spec from the diagram.
+ * named after a use case (`UC-004 Find Owners`) opens its spec from the diagram. The
+ * properties panel can be collapsed from the toolbar; the choice applies to every BPMN
+ * editor opened afterwards.
  */
 private class BpmnFileEditor(
     private val project: Project,
@@ -103,6 +107,8 @@ private class BpmnFileEditor(
 ) : UserDataHolderBase(), FileEditor {
 
     private val document: Document? = FileDocumentManager.getInstance().getDocument(file)
+
+    private val readOnly = document == null || !document.isWritable
 
     private val browser = JBCefBrowser.createBuilder().build()
 
@@ -152,10 +158,10 @@ private class BpmnFileEditor(
     private fun onMessage(message: String) {
         when {
             message == "ready" -> {
-                val readOnly = document == null || !document.isWritable
                 syncedText = document?.text.orEmpty()
                 val useCaseRef = jsString(UseCaseIndex.ACTIVITY_USE_CASE_REF.pattern)
-                execute("window.aiupBpmn.setXml(${jsString(syncedText!!)}); window.aiupBpmn.init($readOnly, $useCaseRef);")
+                execute("window.aiupBpmn.setXml(${jsString(syncedText!!)}); " +
+                    "window.aiupBpmn.init($readOnly, $useCaseRef, ${propertiesVisible()});")
             }
 
             message.startsWith(CHANGED_PREFIX) -> applyDiagramEdit(message.removePrefix(CHANGED_PREFIX))
@@ -203,6 +209,8 @@ private class BpmnFileEditor(
             ZoomAction("Zoom Out", AllIcons.General.ZoomOut, "out"),
             ZoomAction("Fit Diagram", AllIcons.General.FitContent, "fit"),
             Separator.getInstance(),
+            PropertiesPanelAction(),
+            Separator.getInstance(),
             ExportAction(ExportFormat.SVG),
             ExportAction(ExportFormat.PNG),
         )
@@ -246,6 +254,28 @@ private class BpmnFileEditor(
         }
 
         override fun actionPerformed(event: AnActionEvent) = execute("window.aiupBpmn.zoom('$step');")
+    }
+
+    private fun propertiesVisible(): Boolean =
+        PropertiesComponent.getInstance().getBoolean(PROPERTIES_VISIBLE_KEY, true)
+
+    /** Collapses the properties panel; the read-only viewer has none. */
+    private inner class PropertiesPanelAction :
+        ToggleAction("Properties Panel", "Show or collapse the properties panel", AllIcons.Actions.PreviewDetails), DumbAware {
+
+        override fun getActionUpdateThread() = ActionUpdateThread.EDT
+
+        override fun update(event: AnActionEvent) {
+            super.update(event)
+            event.presentation.isEnabled = syncedText != null && !readOnly
+        }
+
+        override fun isSelected(event: AnActionEvent): Boolean = !readOnly && propertiesVisible()
+
+        override fun setSelected(event: AnActionEvent, state: Boolean) {
+            PropertiesComponent.getInstance().setValue(PROPERTIES_VISIBLE_KEY, state, true)
+            execute("window.aiupBpmn.showProperties($state);")
+        }
     }
 
     private inner class ExportAction(private val format: ExportFormat) :
@@ -326,6 +356,7 @@ private class BpmnFileEditor(
         const val PNG_PREFIX = "png:"
         const val EXPORT_FAILED_PREFIX = "export-failed:"
         const val NOTIFICATION_GROUP = "AI Unified Process"
+        const val PROPERTIES_VISIBLE_KEY = "aiup.bpmn.propertiesVisible"
         const val TEXT_SYNC_DELAY_MS = 300
     }
 }

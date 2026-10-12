@@ -59,7 +59,9 @@ The plugin's Kotlin sources live in `src/main/kotlin/ai/unifiedprocess/tools/ij/
   `window.aiupBpmn.setXml/init`. Diagram edits replace the document text in a write command; document edits are
   pushed back debounced. The editor toolbar's SVG/PNG export asks the page (`exportSvg`/`exportPng`), which answers
   `svg:<svg>` / `png:<base64>` / `export-failed:<message>`. Its Zoom In/Out/Fit actions call `window.aiupBpmn.zoom('in'|'out'|'fit')`, since the
-  Ctrl/Cmd+wheel and pinch zoom of bpmn-js do not reliably reach the JCEF page. An activity whose name starts with a Use Case ID
+  Ctrl/Cmd+wheel and pinch zoom of bpmn-js do not reliably reach the JCEF page. The Properties Panel toggle calls
+  `window.aiupBpmn.showProperties(visible)` (also passed as the third `init` argument) and is remembered app-wide in
+  `PropertiesComponent`. An activity whose name starts with a Use Case ID
   (`UC-004 Find Owners`, pattern `ACTIVITY_USE_CASE_REF`, handed to the page in `init`) gets an "Open use case"
   context pad entry (a click in the read-only viewer); the page sends `open-use-case:<id>` and the IDE opens the spec. Keep the bpmn-js versions in `bpmn-editor/package.json`
   in line with the studio.
