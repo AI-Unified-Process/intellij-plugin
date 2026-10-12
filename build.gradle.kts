@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.11.0"
+version = "0.12.0"
 
 repositories {
     mavenCentral()
@@ -48,6 +48,11 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.12.0</h3>
+            <ul>
+                <li>BPMN editor: collapse the properties panel from the editor toolbar to give the diagram more
+                    space.</li>
+            </ul>
             <h3>0.11.0</h3>
             <ul>
                 <li>BPMN editor: Zoom In, Zoom Out and Fit Diagram in the editor toolbar.</li>
