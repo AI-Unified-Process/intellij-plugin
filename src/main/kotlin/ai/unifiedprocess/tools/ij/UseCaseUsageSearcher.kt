@@ -11,10 +11,13 @@ import com.intellij.psi.*
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.AbstractQuery
 import com.intellij.util.Processor
 import com.intellij.util.Query
+import org.jetbrains.uast.UAnchorOwner
+import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.toUElementOfType
 
 /**
  * Returns every Java/Markdown site that participates in the same Use Case
@@ -50,7 +53,7 @@ class UseCaseUsageSearcher : UsageSearcher {
 
     private fun collectUsages(project: Project, target: UseCaseRelatedSymbol): List<Usage> =
         buildList {
-            addAll(javaUsages(project, target))
+            addAll(annotationUsages(project, target))
             addAll(markdownUsages(project, target))
         }
 
@@ -71,52 +74,52 @@ class UseCaseUsageSearcher : UsageSearcher {
             }
     }
 
-    private fun javaUsages(project: Project, target: UseCaseRelatedSymbol): List<Usage> {
+    private fun annotationUsages(project: Project, target: UseCaseRelatedSymbol): List<Usage> {
         val annotationClass = findUseCaseAnnotationClass(project) ?: return emptyList()
-        val fqn = annotationClass.qualifiedName ?: return emptyList()
         val annotated = AnnotatedElementsSearch
             .searchPsiMethods(annotationClass, GlobalSearchScope.projectScope(project))
             .findAll()
 
         val result = mutableListOf<Usage>()
         for (method in annotated) {
-            val ann = method.getAnnotation(fqn) ?: continue
-            val ucId = stringAttr(ann, "id") ?: continue
+            // The search answers in Java terms, which for a test written in another language is a
+            // light method whose ranges point at nothing the author can see. UAST leads back to the
+            // annotation as written, so every usage below lands in real source.
+            val uMethod = method.toUElementOfType<UMethod>() ?: continue
+            val annotation = uMethod.uAnnotations
+                .firstOrNull { UseCaseIndex.isUseCaseAnnotation(it) } ?: continue
+            val ucId = UseCaseIndex.attributeString(annotation, "id") ?: continue
             if (ucId != target.useCaseId) continue
-            collectAnnotationLiterals(ann, target, result)
+            collectAnnotationValues(annotation, target, result)
         }
         return result
     }
 
-    private fun collectAnnotationLiterals(
-        ann: PsiAnnotation,
+    private fun collectAnnotationValues(
+        annotation: UAnnotation,
         target: UseCaseRelatedSymbol,
         out: MutableList<Usage>,
     ) {
         var sawScenarioAttr = false
-        for (pair in ann.parameterList.attributes) {
-            when (pair.name ?: "value") {
+        for (attribute in annotation.attributeValues) {
+            when (attribute.name ?: "value") {
                 "id" -> if (target is UseCaseSymbol) {
-                    (pair.value as? PsiLiteralExpression)?.let { out += it.asValueUsage() }
+                    attribute.expression.sourcePsi?.let { out += it.asValueUsage() }
                 }
                 "scenario" -> {
                     sawScenarioAttr = true
                     if (target is ScenarioSymbol) {
-                        val literal = pair.value as? PsiLiteralExpression ?: continue
-                        val scenario = literal.value as? String
+                        val scenario = attribute.expression.evaluate() as? String
                         val code = scenario?.let(::extractScenarioCode)
-                        if (code == target.scenarioCode) out += literal.asValueUsage()
+                        if (code == target.scenarioCode) {
+                            attribute.expression.sourcePsi?.let { out += it.asValueUsage() }
+                        }
                     }
                 }
                 "businessRules" -> if (target is BusinessRuleSymbol) {
-                    val value = pair.value ?: continue
-                    val literals = when (value) {
-                        is PsiLiteralExpression -> listOf(value)
-                        else -> PsiTreeUtil.findChildrenOfType(value, PsiLiteralExpression::class.java).toList()
-                    }
-                    for (literal in literals) {
-                        val br = literal.value as? String ?: continue
-                        if (br == target.brId) out += literal.asValueUsage()
+                    for (element in UseCaseIndex.arrayElements(attribute.expression)) {
+                        if (element.evaluate() as? String != target.brId) continue
+                        element.sourcePsi?.let { out += it.asValueUsage() }
                     }
                 }
             }
@@ -126,9 +129,8 @@ class UseCaseUsageSearcher : UsageSearcher {
         // attribute defaults to the main scenario, so anchor the usage on the
         // annotation's `UseCase` identifier (no literal exists to point at).
         if (target is ScenarioSymbol && target.scenarioCode == null && !sawScenarioAttr) {
-            ann.nameReferenceElement?.let { ref ->
-                out += PsiUsage.textUsage(ref.containingFile, ref.textRange)
-            }
+            val anchor = (annotation as? UAnchorOwner)?.uastAnchor?.sourcePsi ?: annotation.sourcePsi
+            anchor?.let { out += PsiUsage.textUsage(it.containingFile, it.textRange) }
         }
     }
 
@@ -207,15 +209,14 @@ class UseCaseUsageSearcher : UsageSearcher {
         }
     }
 
-    private fun PsiLiteralExpression.asValueUsage(): Usage {
+    // The element a value was written as, whatever the language: a Java literal or a Kotlin string
+    // template, both of which carry their quotes in the text range.
+    private fun PsiElement.asValueUsage(): Usage {
         val r = textRange
         // Skip the surrounding quotes.
         val rangeForUsage = if (r.length >= 2) TextRange(r.startOffset + 1, r.endOffset - 1) else r
         return PsiUsage.textUsage(containingFile, rangeForUsage)
     }
-
-    private fun stringAttr(annotation: PsiAnnotation, name: String): String? =
-        ((annotation.findAttributeValue(name) as? PsiLiteralExpression)?.value) as? String
 
     private fun extractScenarioCode(scenario: String): String? {
         if (scenario.isBlank() || UseCaseIndex.isMainScenarioLabel(scenario)) {
