@@ -2,10 +2,10 @@
 
 ## Overview
 
-**Use Case ID:** UC-009   
-**Use Case Name:** Book Visit for Pet   
-**Primary Actor:** Clinic User   
-**Goal:** Record a veterinary visit for an existing pet, documenting the date and the reason for the appointment.   
+**Use Case ID:** UC-009  
+**Use Case Name:** Book Visit for Pet  
+**Primary Actor:** Clinic User  
+**Goal:** Record a veterinary visit for an existing pet, documenting the date and the reason for the appointment.  
 **Status:** Approved
 
 ## Preconditions
@@ -27,7 +27,7 @@
 
 ### A1: Missing Description
 
-**Trigger:** The description field is blank at step 4.
+**Trigger:** The description field is blank at step 4.  
 **Flow:**
 
 1. System re-renders the visit form with a validation error on `description`.
@@ -36,7 +36,7 @@
 
 ### A2: Pet Not Owned by Given Owner
 
-**Trigger:** In step 2, the supplied pet id does not correspond to any pet belonging to the owner.
+**Trigger:** In step 2, the supplied pet id does not correspond to any pet belonging to the owner.  
 **Flow:**
 
 1. System cannot resolve the pet for the given owner and shows the application error view.
@@ -44,7 +44,7 @@
 
 ### A3: Owner Not Found
 
-**Trigger:** In step 2, no owner exists for the supplied owner id.
+**Trigger:** In step 2, no owner exists for the supplied owner id.  
 **Flow:**
 
 1. System cannot resolve the owner and shows the application error view.
