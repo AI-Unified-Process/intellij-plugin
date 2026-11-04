@@ -48,6 +48,12 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>Unreleased</h3>
+            <ul>
+                <li>Use Case markers in code comments (<code>// UC-002 BR-001: …</code>) link to the spec with a
+                    gutter icon, in every language. Spec lines get a second icon back to the markers, and Find
+                    Usages covers them in both directions.</li>
+            </ul>
             <h3>0.12.0</h3>
             <ul>
                 <li>BPMN editor: collapse the properties panel from the editor toolbar to give the diagram more
