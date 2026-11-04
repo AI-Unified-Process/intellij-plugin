@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.12.0"
+version = "0.13.0"
 
 repositories {
     mavenCentral()
@@ -48,7 +48,7 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
-            <h3>Unreleased</h3>
+            <h3>0.13.0</h3>
             <ul>
                 <li>Use Case markers in code comments (<code>// UC-002 BR-001: …</code>) link to the spec with a
                     gutter icon, in every language. Spec lines get a second icon back to the markers, and Find
