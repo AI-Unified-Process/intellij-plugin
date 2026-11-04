@@ -42,12 +42,23 @@ The plugin's Kotlin sources live in `src/main/kotlin/ai/unifiedprocess/tools/ij/
   reference (e.g. the `UseCase` token in `@UseCase(...)`), per IntelliJ's contract that markers must anchor to leaves.
   Reads the `id` attribute as a `PsiLiteralExpression` and delegates lookup to `UseCaseIndex`.
 
+- **`CommentToSpecLineMarkerProvider`** (line marker for every language, registered with `language=""`): links the
+  markers the implementation carries instead of `@UseCase` (`// UC-XXX BR-YYY: …`, `-- UC-XXX BR-YYY: …`, Javadoc
+  lines) to the spec. Anchors on the leaf inside a `PsiComment`, since doc and XML comments are composites. One marker
+  per leaf, targeting every reference in its text; `UseCaseIndex.findSpecTargets` falls back to the spec file.
+
 - **`SpecToUseCaseLineMarkerProvider`** (Markdown line marker): Markdown PSI is unstable across IDE versions, so this
   provider does **plain-text regex matching on leaf elements** rather than navigating the AST. Recognised sites:
   `**Use Case ID:** UC-XXX` lines, the H1 title, main-flow headings, alt-flow headings (`### A1: …` / `### 3a. …`),
   and business-rule sites (`### BR-XXX` headings or `- **GR-XXX:** …` bullets). The `isFirstMatchingLeafOnLine` helper
   walks `PsiTreeUtil.prevLeaf` back to the document line start to suppress duplicate markers when a regex match spans
   multiple PSI leaves on the same line — keep this guard if you add more Markdown patterns.
+
+- **`SpecToImplementationLineMarkerProvider`** (Markdown line marker): the reverse of the comment markers. A second
+  icon on the ID line (or an ID-bearing H1 when there is none), rule and alt-flow sites, built in
+  `collectSlowLineMarkers` because it searches. `UseCaseIndex.findImplementationMarkers` finds the comments through the
+  word index (`UsageSearchContext.IN_COMMENTS`), excludes test sources, and also feeds `UseCaseUsageSearcher`;
+  `UseCaseDeclarationProvider` declares the symbols on the comment references so Find Usages starts there too.
 
 - **BPMN editor** (`BpmnFileEditor.kt`): `BpmnEditorProvider` opens `*.bpmn` files (mapped to the XML file type
   in `plugin.xml`) in a JCEF browser, placed before the text editor; `BpmnEditorSelector` selects that
@@ -82,6 +93,8 @@ The plugin assumes the host project follows this shape (from the `aiup-petclinic
 - Markdown specs anywhere in the project content scope, identified by filename (`UC-XXX-*.md` or `UC-XXX_*.md`,
   `SUC-*`/`BUC-*` variants, optionally behind a project prefix such as `petclinic-UC-XXX-*.md`), a body line
   `**Use Case ID:** UC-XXX`, or an H1 title starting with the ID (`# UC-001: Kunde suchen`).
+- Implementation code names what it realizes in comments: `// UC-XXX BR-YYY: …`, `-- UC-XXX BR-YYY: …`, `UC-XXX A1`,
+  or a plain `UC-XXX`; a `/` list shares the qualifier (`UC-007 / UC-008 BR-001`).
 - Business rules declared as Markdown headings of the form `### BR-XXX`, or — in the German spec style — as bold
   bullet items `- **GR-XXX:** …`.
 - The main flow heading may be `Main Success Scenario` (English), `Hauptszenario` or `Hauptablauf` (German); the
@@ -91,7 +104,8 @@ The plugin assumes the host project follows this shape (from the `aiup-petclinic
   `scenario` attribute accepts either code as prefix (e.g. `scenario = "3a: Keine Treffer gefunden"`).
 
 The ID/filename/heading patterns live centrally in `UseCaseIndex` (`USE_CASE_ID_LINE`, `USE_CASE_TITLE`, `ACTIVITY_USE_CASE_REF`,
-`SPEC_FILE_NAME`, `MAIN_SCENARIO_HEADING`, `ALT_FLOW_HEADING`, `BUSINESS_RULE_SITE`, `SCENARIO_CODE`);
+`SPEC_FILE_NAME`, `MAIN_SCENARIO_HEADING`, `ALT_FLOW_HEADING`, `BUSINESS_RULE_SITE`, `SCENARIO_CODE`,
+`USE_CASE_REFERENCE`);
 `SpecToUseCaseLineMarkerProvider`, `UseCaseDeclarationProvider`, and `UseCaseUsageSearcher` reference those shared
 values rather than defining their own copies — keep it that way when changing the patterns.
 

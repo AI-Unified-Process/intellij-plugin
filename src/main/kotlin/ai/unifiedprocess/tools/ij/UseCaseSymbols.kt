@@ -10,7 +10,7 @@ import com.intellij.platform.backend.presentation.TargetPresentation
 /**
  * Symbols that bridge `@UseCase`-annotated tests and Markdown specs.
  *
- * Each site (Java literal, Markdown heading, Markdown UC-ID line) declares
+ * Each site (Java literal, code comment, Markdown heading, Markdown UC-ID line) declares
  * one of these symbols at its text range. Find Usages on any site resolves
  * to the symbol; the searcher then enumerates *all* sites declaring it, so
  * the user sees the full set of related test methods and spec locations.

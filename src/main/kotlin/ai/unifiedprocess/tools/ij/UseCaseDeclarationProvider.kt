@@ -16,6 +16,9 @@ import com.intellij.psi.util.PsiTreeUtil
  *  - `@UseCase(scenario = "A1: ...")` literal -> ScenarioSymbol
  *  - `@UseCase(businessRules = {"BR-XXX"})` literal -> BusinessRuleSymbol
  *
+ * Comment sites, in any language: the reference in `// UC-XXX BR-YYY: ...` ->
+ * BusinessRuleSymbol, `UC-XXX A1` -> ScenarioSymbol, a plain `UC-XXX` -> UseCaseSymbol.
+ *
  * Markdown sites (declared on a sub-range of the line so they don't blanket
  * the bundled Markdown plugin's `HeaderSymbol`):
  *  - `**Use Case ID:** UC-XXX` -> UseCaseSymbol on the UC-XXX text
@@ -31,7 +34,34 @@ class UseCaseDeclarationProvider : PsiSymbolDeclarationProvider {
         offsetInElement: Int,
     ): Collection<PsiSymbolDeclaration> {
         javaDeclaration(element)?.let { return listOf(it) }
+        if (element.containingFile?.virtualFile?.extension != "md") {
+            return commentDeclarations(element, offsetInElement)
+        }
         return markdownDeclarations(element, offsetInElement)
+    }
+
+    private fun commentDeclarations(
+        element: PsiElement,
+        offsetInElement: Int,
+    ): Collection<PsiSymbolDeclaration> {
+        if (element.firstChild != null) return emptyList()
+        val references = UseCaseIndex.locateUseCaseReferences(element.text)
+        if (references.isEmpty() || !UseCaseIndex.isCommentLeaf(element)) return emptyList()
+        return references
+            .filter { (_, range) -> offsetInElement < 0 || offsetInElement in range.first..range.last + 1 }
+            .map { (reference, range) ->
+                SimpleDeclaration(element, TextRange(range.first, range.last + 1), symbolOf(element, reference))
+            }
+    }
+
+    private fun symbolOf(element: PsiElement, reference: UseCaseIndex.UseCaseReference): Symbol {
+        val id = reference.useCaseId
+        val qualifier = reference.qualifier ?: return UseCaseSymbol(element.project, id)
+        return if (reference.isBusinessRule) {
+            BusinessRuleSymbol(element.project, id, qualifier)
+        } else {
+            ScenarioSymbol(element.project, id, qualifier)
+        }
     }
 
     private fun javaDeclaration(element: PsiElement): PsiSymbolDeclaration? {

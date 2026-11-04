@@ -73,6 +73,14 @@ In Java:
 * `@UseCase(id = "UC-XXX")` jumps to the matching spec file, landing on the scenario heading and any business
   rule headings referenced via `businessRules = {...}`.
 
+In code comments of any language (the markers the implementation carries instead of `@UseCase`):
+
+* `// UC-XXX BR-YYY: …`, `-- UC-XXX BR-YYY: …` or a Javadoc line `UC-XXX BR-YYY: …` jumps to that business rule in
+  the spec, `UC-XXX A1` or `UC-XXX 3a` to that alternative flow, and a plain `UC-XXX` to the spec file. A rule or flow
+  the spec does not declare falls back to the spec file. `UC-007 / UC-008 BR-001` names BR-001 of both Use Cases; a
+  comment with several references offers a chooser. `.sql` files need an IDE that parses SQL (the Database Tools and
+  SQL plugin); as plain text they have no comments to anchor on.
+
 In Markdown specs:
 
 * `**Use Case ID:** UC-XXX` jumps to all test methods annotated with that ID.
@@ -85,6 +93,14 @@ In Markdown specs:
   that reference that rule via `businessRules = {"BR-XXX"}`, scoped to the Use Case declared by the spec file
   (rule ids are unique only within a UC).
 
+A second icon on the same lines jumps to the implementation, the code comments that carry a matching marker (test
+sources excluded, they link through `@UseCase`):
+
+* `### BR-XXX` / `- **GR-XXX:** …` jumps to the `UC-XXX BR-XXX` markers of that Use Case, `### A1: ...` / `### 3a. ...`
+  to the `UC-XXX A1` / `UC-XXX 3a` markers.
+* `**Use Case ID:** UC-XXX` — or the H1 title `# UC-XXX: …` when the spec has no such line — jumps to every marker
+  of the Use Case.
+
 ### Find Usages (Alt+F7)
 
 Find Usages is wired in both directions, mirroring the gutter icons:
@@ -92,7 +108,8 @@ Find Usages is wired in both directions, mirroring the gutter icons:
 * On a `@UseCase` annotation or its `id` literal — finds spec leaves (scenario heading + BR headings).
 * On a string inside `businessRules = {...}` — finds the matching `### BR-XXX` heading in the spec.
 * On `**Use Case ID:** UC-XXX`, the H1 title, `## Main Success Scenario`, `### A1: ...`, and `### BR-XXX` lines —
-  finds the corresponding test methods or test classes.
+  finds the corresponding test methods or test classes, and the Use Case markers in code comments.
+* On a marker in a code comment (`// UC-XXX BR-YYY: …`) — finds the spec line, the tests, and the other markers.
 
 ### Inspection
 

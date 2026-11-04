@@ -65,26 +65,27 @@ class UseCaseToSpecLineMarkerProvider : LineMarkerProvider {
 
         return builder.createLineMarkerInfo(element)
     }
+}
 
-    private object SpecTargetRenderer : PsiTargetPresentationRenderer<PsiElement>() {
-        override fun getElementText(element: PsiElement): String {
-            val file = element.containingFile ?: return element.text.orEmpty()
-            return headingTextAt(file, element.textRange.startOffset)
-                ?: file.name
-        }
+/** Shows a spec target as its heading text, with the spec file name as the container. */
+internal object SpecTargetRenderer : PsiTargetPresentationRenderer<PsiElement>() {
+    override fun getElementText(element: PsiElement): String {
+        val file = element.containingFile ?: return element.text.orEmpty()
+        return headingTextAt(file, element.textRange.startOffset)
+            ?: file.name
+    }
 
-        override fun getContainerText(element: PsiElement): String? =
-            element.containingFile?.name
+    override fun getContainerText(element: PsiElement): String? =
+        element.containingFile?.name
 
-        private fun headingTextAt(file: PsiFile, offset: Int): String? {
-            val document = PsiDocumentManager.getInstance(file.project).getDocument(file) ?: return null
-            if (offset < 0 || offset > document.textLength) return null
-            val line = document.getLineNumber(offset)
-            val raw = document.getText(
-                TextRange(document.getLineStartOffset(line), document.getLineEndOffset(line)),
-            )
-            val stripped = raw.trimStart().trimStart('#').trim()
-            return stripped.takeIf { it.isNotEmpty() }
-        }
+    private fun headingTextAt(file: PsiFile, offset: Int): String? {
+        val document = PsiDocumentManager.getInstance(file.project).getDocument(file) ?: return null
+        if (offset < 0 || offset > document.textLength) return null
+        val line = document.getLineNumber(offset)
+        val raw = document.getText(
+            TextRange(document.getLineStartOffset(line), document.getLineEndOffset(line)),
+        )
+        val stripped = raw.trimStart().trimStart('#').trim()
+        return stripped.takeIf { it.isNotEmpty() }
     }
 }

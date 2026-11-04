@@ -17,12 +17,13 @@ import com.intellij.util.Processor
 import com.intellij.util.Query
 
 /**
- * Returns every Java/Markdown site that participates in the same Use Case
+ * Returns every Java/Markdown/comment site that participates in the same Use Case
  * relation as the cursor target. Handles `UseCaseSymbol` (UC-XXX),
  * `BusinessRuleSymbol` (UC-XXX × BR-YYY) and `ScenarioSymbol`
  * (UC-XXX × {Main | Aₙ}). Site list, in order:
  *   - Java `@UseCase(...)` literals matching the symbol
  *   - Markdown spec lines/headings matching the symbol
+ *   - Use Case markers in the comments of the implementation
  *
  * Note: when invoked from a Markdown spec, the spec's own line appears as a
  * self-reference in the result. There is no API to detect the cursor's source
@@ -52,7 +53,19 @@ class UseCaseUsageSearcher : UsageSearcher {
         buildList {
             addAll(javaUsages(project, target))
             addAll(markdownUsages(project, target))
+            addAll(commentUsages(project, target))
         }
+
+    private fun commentUsages(project: Project, target: UseCaseRelatedSymbol): List<Usage> {
+        val qualifier = when (target) {
+            is UseCaseSymbol -> null
+            is BusinessRuleSymbol -> target.brId
+            // Code comments have no marker for the Main Success Scenario.
+            is ScenarioSymbol -> target.scenarioCode ?: return emptyList()
+        }
+        return UseCaseIndex.findImplementationMarkers(project, target.useCaseId, qualifier)
+            .map { PsiUsage.textUsage(it.comment.containingFile, it.range) }
+    }
 
     /**
      * Runs the search and downstream consumer (which converts each `Usage`

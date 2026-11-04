@@ -15,6 +15,21 @@ import com.intellij.psi.util.PsiTreeUtil
 import java.util.function.Supplier
 
 /**
+ * The text of the document line [element] starts on, or null unless it is the
+ * first leaf of that line. Anchoring on that leaf yields at most one marker per
+ * visible line, even when a pattern spans multiple PSI leaves.
+ */
+internal fun lineTextOfFirstLeaf(element: PsiElement): String? {
+    val file = element.containingFile ?: return null
+    val document = PsiDocumentManager.getInstance(element.project).getDocument(file) ?: return null
+    val line = document.getLineNumber(element.textRange.startOffset)
+    val lineStart = document.getLineStartOffset(line)
+    val prev = PsiTreeUtil.prevLeaf(element)
+    if (prev != null && prev.textRange.endOffset > lineStart) return null
+    return document.getText(TextRange(lineStart, document.getLineEndOffset(line)))
+}
+
+/**
  * Adds gutter icons in Markdown spec files:
  *  - Next to "**Use Case ID:** UC-XXX" lines, jumping to all test methods
  *    annotated with that Use Case ID.
@@ -45,20 +60,7 @@ class SpecToUseCaseLineMarkerProvider : LineMarkerProvider {
 
         val project = element.project
         val containingFile = element.containingFile ?: return null
-        val document = PsiDocumentManager.getInstance(project)
-            .getDocument(containingFile) ?: return null
-
-        val startOffset = element.textRange.startOffset
-        val lineNumber = document.getLineNumber(startOffset)
-        val lineStart = document.getLineStartOffset(lineNumber)
-
-        // Anchor on the first leaf of each line so we emit at most one marker
-        // per visible line, even when patterns span multiple PSI leaves.
-        val prev = PsiTreeUtil.prevLeaf(element)
-        if (prev != null && prev.textRange.endOffset > lineStart) return null
-
-        val lineEnd = document.getLineEndOffset(lineNumber)
-        val lineText = document.getText(TextRange(lineStart, lineEnd))
+        val lineText = lineTextOfFirstLeaf(element) ?: return null
 
         // Case 1: Use Case ID line
         val ucMatch = useCaseIdLine.find(lineText)

@@ -26,8 +26,12 @@
             <li>Gutter icon on <code>@UseCase</code> annotation jumps to the matching spec file
                 (<code>UC-XXX-*.md</code>, <code>SUC-XXX-*.md</code>, <code>BUC-XXX-*.md</code>, each also with an
                 optional project prefix like <code>petclinic-UC-XXX-*.md</code>)</li>
+            <li>Gutter icon on Use Case markers in code comments (<code>// UC-XXX BR-YYY: …</code>,
+                <code>-- UC-XXX BR-YYY: …</code>) jumps to that business rule or alternative flow in the spec</li>
             <li>Gutter icon on <code>**Use Case ID:** UC-XXX</code> in Markdown jumps to all test methods with that ID</li>
             <li>Gutter icon on <code>### BR-XXX</code> business rule headers jumps to tests referencing that rule</li>
+            <li>A second gutter icon on those spec lines and on alternative-flow headings jumps to the code comments
+                that carry the matching Use Case marker</li>
             <li>Find Usages (Alt+F7) works in both directions, and an inspection flags Use Case IDs without a spec</li>
         </ul>
         <p><b>Setup:</b> the host project must define a Java annotation type called <code>UseCase</code>
@@ -51,9 +55,18 @@
                 language="JAVA"
                 implementationClass="ai.unifiedprocess.tools.ij.UseCaseToSpecLineMarkerProvider"/>
 
+        <!-- No language: comments of every language can carry a Use Case marker. -->
+        <codeInsight.lineMarkerProvider
+                language=""
+                implementationClass="ai.unifiedprocess.tools.ij.CommentToSpecLineMarkerProvider"/>
+
         <codeInsight.lineMarkerProvider
                 language="Markdown"
                 implementationClass="ai.unifiedprocess.tools.ij.SpecToUseCaseLineMarkerProvider"/>
+
+        <codeInsight.lineMarkerProvider
+                language="Markdown"
+                implementationClass="ai.unifiedprocess.tools.ij.SpecToImplementationLineMarkerProvider"/>
 
         <localInspection
                 language="JAVA"

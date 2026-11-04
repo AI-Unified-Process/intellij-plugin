@@ -5,7 +5,13 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.GlobalSearchScopesCore
+import com.intellij.psi.search.PsiSearchHelper
+import com.intellij.psi.search.TextOccurenceProcessor
+import com.intellij.psi.search.UsageSearchContext
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
+import com.intellij.psi.util.PsiTreeUtil
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Helpers to find Use Case specs and tests for a given ID.
@@ -21,6 +27,15 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch
  *  - Test methods are annotated with `@UseCase(id = "UC-XXX", ...)`.
  */
 object UseCaseIndex {
+
+    /** A Use Case, or one of its business rules or alternative flows, named in a code comment. */
+    data class UseCaseReference(val useCaseId: String, val qualifier: String? = null) {
+        val label: String get() = if (qualifier == null) useCaseId else "$useCaseId $qualifier"
+        val isBusinessRule: Boolean get() = qualifier?.matches(BUSINESS_RULE_ID) == true
+    }
+
+    /** A Use Case marker in code: the comment leaf and the file range of the reference in it. */
+    data class ImplementationMarker(val comment: PsiElement, val range: TextRange)
 
     /**
      * Matches the `**Use Case ID:** UC-XXX` declaration line; shared by every
@@ -42,6 +57,20 @@ object UseCaseIndex {
      * Java-only syntax.
      */
     val ACTIVITY_USE_CASE_REF = Regex("""^\s*([SB]?UC-[A-Za-z0-9_-]*[A-Za-z0-9])""")
+
+    /**
+     * A Use Case reference in a code comment, the marker the implementation
+     * carries instead of `@UseCase`: `UC-002`, `UC-002 BR-001` or `UC-010 A2`.
+     * Group 1 is the Use Case ID, group 2 the optional business rule or
+     * alternative-flow code. The lookbehind keeps `UC-002` from matching
+     * inside `SUC-002` or `foo-UC-002`.
+     */
+    val USE_CASE_REFERENCE = Regex(
+        """(?<![\p{L}\p{N}_-])([SB]?UC-[A-Za-z0-9_-]*[A-Za-z0-9])""" +
+            """(?:[ \t]+((?:BR|GR)-[A-Za-z0-9_-]*[A-Za-z0-9]|[A-Z]\d+|\d+[a-z])\b)?""",
+    )
+
+    private val BUSINESS_RULE_ID = Regex("""(?:BR|GR)-.+""")
 
     /**
      * Heading of the main flow section: `Main Success Scenario` (English),
@@ -263,6 +292,85 @@ object UseCaseIndex {
             findBusinessRuleLeaf(project, useCaseId, br)?.let(result::add)
         }
         return result.distinct()
+    }
+
+    /** The distinct Use Case references in a comment text. */
+    fun findUseCaseReferences(text: String): List<UseCaseReference> =
+        locateUseCaseReferences(text).map { it.first }.distinct()
+
+    /**
+     * The Use Case references in a comment text, each with its range in that
+     * text. A qualifier applies to the whole `/` list before it:
+     * `UC-007 / UC-008 BR-001` names BR-001 of both.
+     */
+    fun locateUseCaseReferences(text: String): List<Pair<UseCaseReference, IntRange>> {
+        val matches = USE_CASE_REFERENCE.findAll(text).toList()
+        val qualifiers = matches.map { it.groups[2]?.value }.toMutableList()
+        for (i in matches.lastIndex - 1 downTo 0) {
+            val separator = text.substring(matches[i].range.last + 1, matches[i + 1].range.first)
+            if (qualifiers[i] == null && separator.trim() == "/") qualifiers[i] = qualifiers[i + 1]
+        }
+        return matches.mapIndexed { i, match ->
+            UseCaseReference(match.groupValues[1], qualifiers[i]) to match.range
+        }
+    }
+
+    /** True for a PSI leaf that is, or is part of, a comment. */
+    fun isCommentLeaf(element: PsiElement): Boolean =
+        element.firstChild == null &&
+            PsiTreeUtil.getParentOfType(element, PsiComment::class.java, false) != null
+
+    /**
+     * The Use Case markers in the comments of the project, test sources excluded
+     * (tests link through `@UseCase`). With a [qualifier] only the markers of that
+     * rule or flow, without one every marker of the Use Case. The word index
+     * narrows the search to the files mentioning the ID, so no file is scanned.
+     */
+    fun findImplementationMarkers(
+        project: Project,
+        useCaseId: String,
+        qualifier: String? = null,
+    ): List<ImplementationMarker> {
+        val scope = GlobalSearchScope.projectScope(project)
+            .intersectWith(GlobalSearchScope.notScope(GlobalSearchScopesCore.projectTestScope(project)))
+        // The search may process files concurrently.
+        val found = ConcurrentLinkedQueue<ImplementationMarker>()
+        val collector = TextOccurenceProcessor { element, _ ->
+            if (isCommentLeaf(element)) {
+                val start = element.textRange.startOffset
+                locateUseCaseReferences(element.text)
+                    .filter { (reference, _) ->
+                        reference.useCaseId == useCaseId &&
+                            (qualifier == null || reference.qualifier.equals(qualifier, ignoreCase = true))
+                    }
+                    .mapTo(found) { (_, range) ->
+                        ImplementationMarker(element, TextRange(start + range.first, start + range.last + 1))
+                    }
+            }
+            true
+        }
+        PsiSearchHelper.getInstance(project)
+            .processElementsWithWord(collector, scope, useCaseId, UsageSearchContext.IN_COMMENTS, true)
+        return found.distinct().sortedWith(
+            compareBy({ it.comment.containingFile.virtualFile?.path.orEmpty() }, { it.range.startOffset }),
+        )
+    }
+
+    /**
+     * Resolves a comment reference to the rule or flow it names in the spec,
+     * falling back to the spec file(s) when that site does not exist.
+     */
+    fun findSpecTargets(project: Project, reference: UseCaseReference): List<PsiElement> {
+        val site = reference.qualifier?.let { qualifier ->
+            if (reference.isBusinessRule) {
+                findBusinessRuleLeaf(project, reference.useCaseId, qualifier)
+            } else {
+                findScenarioLeaf(project, reference.useCaseId, qualifier)
+            }
+        }
+        if (site != null) return listOf(site)
+        val psiManager = PsiManager.getInstance(project)
+        return findSpecFiles(project, reference.useCaseId).mapNotNull(psiManager::findFile)
     }
 
     private fun testMethodsMatching(
