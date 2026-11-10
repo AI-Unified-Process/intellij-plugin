@@ -66,14 +66,14 @@ class SpecToImplementationTest : UnifiedProcessTestBase() {
     }
 
     fun testGermanTitleCarriesTheIconWithoutIdLine() {
-        addCode("Kunde.java", "// UC-001 GR-008: Regel.\nclass Kunde {}\n")
+        addCode("Kunde.java", "// UC-001 BR-008: Regel.\nclass Kunde {}\n")
         val german = myFixture.addFileToProject(
             "docs/UC-001_Kunde_suchen.md",
-            "# UC-001: Kunde suchen\n\n## Geschäftsregeln\n\n- **GR-008:** Eine Regel\n",
+            "# UC-001: Kunde suchen\n\n## Geschäftsregeln\n\n- **BR-008:** Eine Regel\n",
         )
         myFixture.configureFromExistingVirtualFile(german.virtualFile)
 
-        assertEquals(1, targets("Go to implementation of UC-001 GR-008").size)
+        assertEquals(1, targets("Go to implementation of UC-001 BR-008").size)
         val useCaseIcons = myFixture.findAllGutters().tooltips().filter { it == "Go to implementation of UC-001" }
         assertEquals(1, useCaseIcons.size)
     }

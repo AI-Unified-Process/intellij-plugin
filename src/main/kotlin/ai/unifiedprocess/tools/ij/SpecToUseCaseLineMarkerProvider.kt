@@ -33,7 +33,7 @@ internal fun lineTextOfFirstLeaf(element: PsiElement): String? {
  * Adds gutter icons in Markdown spec files:
  *  - Next to "**Use Case ID:** UC-XXX" lines, jumping to all test methods
  *    annotated with that Use Case ID.
- *  - Next to business-rule sites ("### BR-XXX" headings or "- **GR-XXX:** …"
+ *  - Next to business-rule sites ("### BR-XXX" headings or "- **BR-XXX:** …"
  *    bullets), jumping to test methods that reference that business rule via
  *    the @UseCase(businessRules = {...}) attribute.
  *  - Next to scenario headings (`## Main Success Scenario` / `## Hauptablauf`,

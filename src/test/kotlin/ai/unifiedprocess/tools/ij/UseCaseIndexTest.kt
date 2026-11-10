@@ -376,12 +376,12 @@ class UseCaseIndexTest : UnifiedProcessTestBase() {
 
             ## Geschäftsregeln
 
-            - **GR-001:** Inaktive Kunden werden standardmässig nicht angezeigt.
-            - **GR-002:** Die Suche ist case-insensitive
+            - **BR-001:** Inaktive Kunden werden standardmässig nicht angezeigt.
+            - **BR-002:** Die Suche ist case-insensitive
             """.trimIndent(),
         )
 
-        val leaf = UseCaseIndex.findBusinessRuleLeaf(project, "UC-001", "GR-002")
+        val leaf = UseCaseIndex.findBusinessRuleLeaf(project, "UC-001", "BR-002")
         assertNotNull(leaf)
     }
 

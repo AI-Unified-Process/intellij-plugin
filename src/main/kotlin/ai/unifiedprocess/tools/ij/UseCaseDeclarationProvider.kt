@@ -25,7 +25,7 @@ import com.intellij.psi.util.PsiTreeUtil
  *  - `# Title` (H1, only when the file declares a UC ID) -> UseCaseSymbol on the title text
  *  - `## Main Success Scenario` / `## Hauptablauf` -> ScenarioSymbol(null)
  *  - `### A1: ...` / `### 3a. ...` -> ScenarioSymbol("A1" / "3a")
- *  - `### BR-XXX` heading or `- **GR-XXX:** ...` bullet -> BusinessRuleSymbol
+ *  - `### BR-XXX` heading or `- **BR-XXX:** ...` bullet -> BusinessRuleSymbol
  */
 class UseCaseDeclarationProvider : PsiSymbolDeclarationProvider {
 

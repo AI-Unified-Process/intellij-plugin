@@ -67,10 +67,10 @@ object UseCaseIndex {
      */
     val USE_CASE_REFERENCE = Regex(
         """(?<![\p{L}\p{N}_-])([SB]?UC-[A-Za-z0-9_-]*[A-Za-z0-9])""" +
-            """(?:[ \t]+((?:BR|GR)-[A-Za-z0-9_-]*[A-Za-z0-9]|[A-Z]\d+|\d+[a-z])\b)?""",
+            """(?:[ \t]+(BR-[A-Za-z0-9_-]*[A-Za-z0-9]|[A-Z]\d+|\d+[a-z])\b)?""",
     )
 
-    private val BUSINESS_RULE_ID = Regex("""(?:BR|GR)-.+""")
+    private val BUSINESS_RULE_ID = Regex("""BR-.+""")
 
     /**
      * Heading of the main flow section: `Main Success Scenario` (English),
@@ -90,10 +90,9 @@ object UseCaseIndex {
 
     /**
      * A business-rule declaration site: a heading (`### BR-001 …`) or a bold
-     * bullet item (`- **GR-008:** …`, the German spec style). Accepts the
-     * `BR-` and `GR-` (Geschäftsregel) prefixes.
+     * bullet item (`- **BR-008:** …`).
      */
-    val BUSINESS_RULE_SITE = Regex("""^(?:#{1,6}\s+|\s*[-*]\s+\*\*)((?:BR|GR)-[A-Za-z0-9_-]+)\b""")
+    val BUSINESS_RULE_SITE = Regex("""^(?:#{1,6}\s+|\s*[-*]\s+\*\*)(BR-[A-Za-z0-9_-]+)\b""")
 
     /**
      * The code prefix of a scenario label: `A1` in "A1: Missing Description"
@@ -413,7 +412,7 @@ object UseCaseIndex {
 
     fun findBusinessRuleLeaf(project: Project, useCaseId: String, brId: String): PsiElement? {
         // Both declaration styles: heading (`### BR-001 …`) and bold bullet
-        // item (`- **GR-008:** …`).
+        // item (`- **BR-008:** …`).
         val pattern = Regex("""^(?:#{1,6}\s+|\s*[-*]\s+\*\*)${Regex.escape(brId)}\b""")
         return findHeadingLeaf(project, useCaseId, pattern)
     }

@@ -50,7 +50,7 @@ The plugin's Kotlin sources live in `src/main/kotlin/ai/unifiedprocess/tools/ij/
 - **`SpecToUseCaseLineMarkerProvider`** (Markdown line marker): Markdown PSI is unstable across IDE versions, so this
   provider does **plain-text regex matching on leaf elements** rather than navigating the AST. Recognised sites:
   `**Use Case ID:** UC-XXX` lines, the H1 title, main-flow headings, alt-flow headings (`### A1: …` / `### 3a. …`),
-  and business-rule sites (`### BR-XXX` headings or `- **GR-XXX:** …` bullets). The `isFirstMatchingLeafOnLine` helper
+  and business-rule sites (`### BR-XXX` headings or `- **BR-XXX:** …` bullets). The `isFirstMatchingLeafOnLine` helper
   walks `PsiTreeUtil.prevLeaf` back to the document line start to suppress duplicate markers when a regex match spans
   multiple PSI leaves on the same line — keep this guard if you add more Markdown patterns.
 
@@ -95,8 +95,8 @@ The plugin assumes the host project follows this shape (from the `aiup-petclinic
   `**Use Case ID:** UC-XXX`, or an H1 title starting with the ID (`# UC-001: Kunde suchen`).
 - Implementation code names what it realizes in comments: `// UC-XXX BR-YYY: …`, `-- UC-XXX BR-YYY: …`, `UC-XXX A1`,
   or a plain `UC-XXX`; a `/` list shares the qualifier (`UC-007 / UC-008 BR-001`).
-- Business rules declared as Markdown headings of the form `### BR-XXX`, or — in the German spec style — as bold
-  bullet items `- **GR-XXX:** …`.
+- Business rules declared as Markdown headings of the form `### BR-XXX`, or as bold bullet items
+  `- **BR-XXX:** …`.
 - The main flow heading may be `Main Success Scenario` (English), `Hauptszenario` or `Hauptablauf` (German); the
   `scenario` attribute on `@UseCase` accepts all three labels (case-insensitive) as the main flow.
 - Alternative flows are coded `A1`/`A2` (`### A1: …`, branching at the step the `**Trigger:**` references) or in the

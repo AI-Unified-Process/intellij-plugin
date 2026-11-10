@@ -103,8 +103,8 @@ class CommentToSpecLineMarkerProviderTest : UnifiedProcessTestBase() {
     fun testUseCaseIdInsideLongerIdIsNoReference() {
         assertEquals(emptyList<UseCaseIndex.UseCaseReference>(), UseCaseIndex.findUseCaseReferences("foo-UC-002 XUC-002"))
         assertEquals(
-            listOf(UseCaseIndex.UseCaseReference("SUC-002", "GR-008")),
-            UseCaseIndex.findUseCaseReferences("SUC-002 GR-008: Regel"),
+            listOf(UseCaseIndex.UseCaseReference("SUC-002", "BR-008")),
+            UseCaseIndex.findUseCaseReferences("SUC-002 BR-008: Regel"),
         )
     }
 

@@ -157,7 +157,7 @@ class SpecToUseCaseLineMarkerProviderTest : UnifiedProcessTestBase() {
                 @UseCase(id = "UC-001", scenario = "3a: Keine Treffer gefunden")
                 void keineTreffer() {}
 
-                @UseCase(id = "UC-001", businessRules = {"GR-002"})
+                @UseCase(id = "UC-001", businessRules = {"BR-002"})
                 void caseInsensitiv() {}
             }
             """.trimIndent(),
@@ -181,8 +181,8 @@ class SpecToUseCaseLineMarkerProviderTest : UnifiedProcessTestBase() {
 
             ## Geschäftsregeln
 
-            - **GR-001:** Inaktive Kunden werden nicht angezeigt.
-            - **GR-002:** Die Suche ist case-insensitive
+            - **BR-001:** Inaktive Kunden werden nicht angezeigt.
+            - **BR-002:** Die Suche ist case-insensitive
             """.trimIndent(),
         )
         myFixture.configureFromExistingVirtualFile(spec.virtualFile)
@@ -201,8 +201,8 @@ class SpecToUseCaseLineMarkerProviderTest : UnifiedProcessTestBase() {
             tooltips.any { it.contains("Go to test methods for 3a") },
         )
         assertTrue(
-            "expected GR-002 gutter, got $tooltips",
-            tooltips.any { it.contains("Go to test methods for GR-002") },
+            "expected BR-002 gutter, got $tooltips",
+            tooltips.any { it.contains("Go to test methods for BR-002") },
         )
     }
 
