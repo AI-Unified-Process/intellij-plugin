@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.13.0"
+version = "0.13.1"
 
 repositories {
     mavenCentral()
@@ -48,6 +48,11 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.13.1</h3>
+            <ul>
+                <li>Business rules are <code>BR-NNN</code> in every specification language; the German
+                    <code>GR-NNN</code> prefix is no longer recognised.</li>
+            </ul>
             <h3>0.13.0</h3>
             <ul>
                 <li>Use Case markers in code comments (<code>// UC-002 BR-001: …</code>) link to the spec with a
