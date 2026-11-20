@@ -49,7 +49,10 @@ kept out of the step's diagram node.
 ### BPMN editor
 
 `*.bpmn` files (BPMN 2.0 process models) open in the same bpmn-js modeler the AI Unified Process Studio uses:
-palette and canvas next to the properties panel of the selected element. The diagram is the first editor tab,
+palette and canvas next to the properties panel of the selected element. Elements the palette does not show — user,
+service and script tasks, typed events, subprocesses and every other BPMN element — come from the searchable
+"Create element" menu (the palette's "…" entry, key N) or, attached to the selected element, from "Append element"
+in its context pad (key A). The diagram is the first editor tab,
 the XML is still available in the **Text** tab; both edit the same document, so an edit in the diagram is an
 ordinary, undoable change of the file, and an edit of the XML is picked up by the diagram. Opening a file
 imports it unchanged — it is only rewritten once you edit the diagram. Read-only files open in the navigable

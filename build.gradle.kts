@@ -48,6 +48,12 @@ intellijPlatform {
             untilBuild = provider { null }
         }
         changeNotes = """
+            <h3>0.14.0</h3>
+            <ul>
+                <li>The BPMN editor creates and appends any BPMN element: the palette's "…" entry (N) and the
+                    context pad's "Append element" (A) open a searchable menu with every element, such as user,
+                    service and script tasks, typed events and subprocesses — as in the AI Unified Process Studio.</li>
+            </ul>
             <h3>0.13.1</h3>
             <ul>
                 <li>Business rules are <code>BR-NNN</code> in every specification language; the German
