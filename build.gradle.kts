@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "ai.unifiedprocess.tools"
-version = "0.13.1"
+version = "0.14.0"
 
 repositories {
     mavenCentral()
